@@ -1,10 +1,11 @@
 import clsx from "clsx";
 import { motion } from "framer-motion";
-import Countdown, { zeroPad } from "react-countdown";
+import Countdown, { zeroPad, type CountdownRenderProps } from "react-countdown";
 import type { AnimTypes } from "~/animations";
 import { getAnimations, sectionVariants } from "~/animations";
 import { MainContent } from "../components/MainContent";
-import { PlayerCard } from "../components/PlayerCard";
+import { RoundPill } from "../components/RoundPill";
+import { TeamShowcase } from "../components/TeamShowcase";
 import { useEdcCurrentMatch } from "~/state/centaurea";
 import { useSettings } from "~/state/dashboard";
 
@@ -13,17 +14,25 @@ interface StartScreenProps {
   to: string;
 }
 
+const startingSoon = <span className="es-countdown-soon">Starting soon</span>;
+
 const renderer = ({
+  days,
+  hours,
   minutes,
   seconds,
-}: {
-  minutes: number;
-  seconds: number;
-}) => (
-  <span>
-    {zeroPad(minutes)}:{zeroPad(seconds)}
-  </span>
-);
+  completed,
+}: CountdownRenderProps) =>
+  completed ? (
+    startingSoon
+  ) : (
+    <>
+      <span className="es-countdown-label">Starts in</span>
+      <span className="es-countdown-time">
+        {zeroPad(days * 24 * 60 + hours * 60 + minutes)}:{zeroPad(seconds)}
+      </span>
+    </>
+  );
 
 export function StartScreen({ from, to }: StartScreenProps) {
   const { red, blue } = useEdcCurrentMatch();
@@ -45,17 +54,11 @@ export function StartScreen({ from, to }: StartScreenProps) {
               : sectionVariants.main.none)}
         >
           <MainContent>
-            <div id="ss-top">
-              <div id="ss-title">Upcoming Match</div>
-
-              <div id="ss-vs">
-                <PlayerCard team={red} side="red" />
-                <div className="ss-vs-line">
-                  <div className="ss-vs-text">VS</div>
-
-                  <PlayerCard team={blue} side="blue" />
-                </div>
-              </div>
+            <RoundPill />
+            <div className="es-teams">
+              <TeamShowcase team={red} side="red" />
+              <div className="es-vs">VS</div>
+              <TeamShowcase team={blue} side="blue" />
             </div>
           </MainContent>
         </motion.div>
@@ -69,20 +72,18 @@ export function StartScreen({ from, to }: StartScreenProps) {
               : sectionVariants.footer.none)}
         >
           <div
-            className={clsx(
-              "ss-time-to-start",
-              settings.showCountdown && "visible",
-            )}
+            className={clsx("es-countdown", settings.showCountdown && "visible")}
           >
-            <span>Time to start: </span>
-            <span className="ss-countdown">
+            {settings.countdown ? (
               <Countdown
                 key={`countdown-${settings.countdown}`}
                 renderer={renderer}
                 date={settings.countdown}
                 autoStart={true}
               />
-            </span>
+            ) : (
+              startingSoon
+            )}
           </div>
         </motion.div>
       </div>

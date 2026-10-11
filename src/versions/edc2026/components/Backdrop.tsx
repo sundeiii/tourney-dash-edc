@@ -5,7 +5,7 @@ import blank from "../static/img/edc/blank.png";
 import gameplay from "../static/img/edc/gameplay-chat.png";
 import mappool from "../static/img/edc/mappool.png";
 import seedings from "../static/img/edc/seedings.png";
-import { GAMEPLAY_HEIGHT, TOP_HEIGHT } from "../screens/defs";
+import { GAMEPLAY_AREA } from "../screens/defs";
 import { GameplaySvgMask } from "./GameplayTransparencyMask";
 
 type Layer = "blank" | "mappool" | "seedings" | "gameplay";
@@ -55,7 +55,7 @@ export function Backdrop({ screen }: { screen: ScreenName }) {
           active === "gameplay" && "active",
         )}
       >
-        <GameplaySvgMask top={TOP_HEIGHT} height={GAMEPLAY_HEIGHT} />
+        <GameplaySvgMask area={GAMEPLAY_AREA} />
       </div>
     </div>
   );

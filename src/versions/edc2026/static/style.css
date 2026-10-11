@@ -137,7 +137,7 @@ p {
   position: relative;
   top: 0px;
   width: 1920px;
-  height: 178px;
+  height: 171px;
   background-repeat: no-repeat;
   transition: ease-in-out 200ms;
   z-index: 0;
@@ -158,16 +158,18 @@ p {
 
 .screen-fade-2 .match-points {
   top: 141px;
+  left: 165px;
+  width: 1590px;
 }
 
 .match-points {
   --best-of: 13;
 
   position: absolute;
-  width: 1564px;
+  width: 1578px;
   height: 24px;
-  top: 154px;
-  left: 178px;
+  top: 147px;
+  left: 171px;
 
   display: grid;
   grid-template-columns: repeat(var(--best-of), 1fr);
@@ -222,16 +224,16 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
 }
 
 #red-player-icon img {
-  width: 178px;
-  height: 178px;
+  width: 171px;
+  height: 171px;
   object-fit: cover;
   outline: 7px solid #dc1f2b;
   outline-offset: -7px;
 }
 
 #blue-player-icon img {
-  width: 178px;
-  height: 178px;
+  width: 171px;
+  height: 171px;
   object-fit: cover;
   outline: 7px solid #1f55dc;
   outline-offset: -7px;
@@ -502,7 +504,7 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
 
 #gameplay {
   width: 1920px;
-  height: 720px;
+  height: 704px;
   background-color: rgb(0, 255, 0, 0);
 }
 
@@ -514,7 +516,7 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
 
 #bottom {
   width: 100%;
-  height: 173px;
+  height: 195px;
   display: flex;
 }
 
@@ -530,7 +532,7 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
 
 #current-map {
   width: 976px;
-  height: 173px;
+  height: 195px;
   margin-left: 377px;
   display: flex;
   flex-direction: row;
@@ -701,7 +703,7 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
 
 #chat {
   width: 976px;
-  height: 173px;
+  height: 195px;
   margin-left: 377px;
   background-color: #121212;
   display: flex;
@@ -971,6 +973,13 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   color: white;
   opacity: 0;
   transition: opacity 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ss-starting-soon {
+  font-size: 150px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1;
+  color: #FFFFFF;
 }
 
 .ss-countdown {
@@ -2104,4 +2113,242 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   font-family: Exo2Black, Helvetica, sans-serif;
   color: var(--label);
   text-transform: uppercase;
+}
+
+/* START + WINNER — centred, flag colours (blue, black, white) */
+
+.round-pill {
+  position: absolute;
+  top: 172px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 8px 28px 10px;
+  background: var(--edc-black);
+  font-size: 30px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.round-pill-label {
+  font-size: 24px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+  text-transform: none;
+}
+
+.team-showcase {
+  --team-color: #dc1f2b;
+  width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.team-showcase.blue {
+  --team-color: #1f55dc;
+}
+
+.team-showcase-avatar {
+  box-sizing: border-box;
+  width: 300px;
+  height: 300px;
+  margin-bottom: 20px;
+  object-fit: cover;
+  border: 10px solid var(--team-color);
+  outline: 4px solid #FFFFFF;
+}
+
+.team-showcase-name,
+.team-showcase-members {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-showcase-name {
+  font-size: 64px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+}
+
+.team-showcase-members {
+  font-size: 30px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+}
+
+.team-showcase-seed {
+  margin-top: 6px;
+  padding: 4px 16px 6px;
+  background: var(--team-color);
+  font-size: 24px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+
+.es-teams {
+  position: absolute;
+  top: 270px;
+  left: 0;
+  width: 1920px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 80px;
+}
+
+/* vertically centred on the 300px avatars */
+.es-vs {
+  margin-top: 95px;
+  font-size: 110px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1;
+  color: #FFFFFF;
+}
+
+/* same place as the in-match screens' chat bar */
+.es-countdown {
+  position: absolute;
+  top: 875px;
+  left: 0;
+  box-sizing: border-box;
+  width: 1920px;
+  height: 205px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  background: #FFFFFF;
+  border-top: 10px solid var(--edc-black);
+  opacity: 0;
+}
+
+.es-countdown.visible {
+  opacity: 1;
+}
+
+.es-countdown-label {
+  font-size: 44px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: var(--edc-black);
+  text-transform: uppercase;
+}
+
+.es-countdown-time,
+.es-countdown-soon {
+  font-size: 110px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1;
+  color: var(--edc-blue);
+}
+
+.es-countdown-time {
+  font-variant-numeric: tabular-nums;
+}
+
+.es-countdown-soon {
+  text-transform: uppercase;
+}
+
+.ew {
+  --team-color: #dc1f2b;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ew.blue {
+  --team-color: #1f55dc;
+}
+
+.ew-title {
+  margin-top: 240px;
+  font-size: 120px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1;
+  letter-spacing: 6px;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+
+.ew-avatar {
+  box-sizing: border-box;
+  width: 280px;
+  height: 280px;
+  margin-top: 30px;
+  object-fit: cover;
+  border: 12px solid var(--team-color);
+  outline: 4px solid #FFFFFF;
+}
+
+.ew-name {
+  width: 1200px;
+  margin-top: 14px;
+  text-align: center;
+  font-size: 88px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ew-score {
+  margin-top: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  padding: 6px 28px 8px;
+  background: var(--edc-black);
+}
+
+.ew-score-points {
+  font-size: 48px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+}
+
+.ew-score-vs {
+  font-size: 28px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+}
+
+.ew-players {
+  margin-top: 24px;
+  display: flex;
+  gap: 40px;
+}
+
+.ew-player {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ew-player img {
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border: 4px solid var(--team-color);
+}
+
+.ew-player span {
+  font-size: 32px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: #FFFFFF;
 }

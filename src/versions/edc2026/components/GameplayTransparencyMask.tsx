@@ -1,11 +1,8 @@
 import backgroundImage from "../static/img/edc/gameplay-chat.png";
 
-interface GameplayTransparencyMaskProps {
-  top: number,
-  height: number
-}
+type Area = { x: number; y: number; width: number; height: number };
 
-export function GameplaySvgMask({ top, height }: GameplayTransparencyMaskProps) {
+export function GameplaySvgMask({ area }: { area: Area }) {
   return (
     <svg
       id="bg-mask"
@@ -17,7 +14,14 @@ export function GameplaySvgMask({ top, height }: GameplayTransparencyMaskProps) 
       <defs>
         <mask id="holeMask">
           <rect x="0" y="0" width="100%" height="100%" fill="white" />
-          <rect id="cut" x="0" y={top} width="1920" height={height} fill="black" />
+          <rect
+            id="cut"
+            x={area.x}
+            y={area.y}
+            width={area.width}
+            height={area.height}
+            fill="black"
+          />
         </mask>
       </defs>
 
