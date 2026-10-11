@@ -1,15 +1,20 @@
 import { produce } from "immer";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { EDC_EVENTS } from "~/edcEvents";
 import type { EdcSettings } from "~/schemas/settings";
 import {
+  QUALIFIER_SUMMARY,
   useEdcBracket,
   useEdcEntrants,
+  useEdcQualifierTeam,
   useEdcSchedule,
   type EdcMatch,
 } from "~/state/centaurea";
 import { useSettings } from "~/state/dashboard";
 
 type Option = { value: string; label: string };
+
+const EVENT_OPTIONS = EDC_EVENTS.map((e) => ({ value: e.id, label: e.label }));
 
 type DataSelectProps = {
   label: string;
@@ -80,12 +85,12 @@ export function EdcMatchControls() {
     (match: EdcMatch) =>
       setSettings(
         produce((settings) => {
-          settings.edc = {
+          Object.assign(settings.edc, {
             matchId: match.id,
             roundId: match.round.id,
             redEntrantId: match.red?.id ?? null,
             blueEntrantId: match.blue?.id ?? null,
-          };
+          });
 
           if (match.date) {
             settings.countdown = match.date;
@@ -146,6 +151,27 @@ export function EdcMatchControls() {
   return (
     <div id="edc-match-controls">
       <DataSelect
+        label="Event"
+        value={settings.edc.eventId}
+        options={EVENT_OPTIONS}
+        placeholder="Select"
+        onSelect={(eventId) =>
+          setSettings(
+            produce((settings) => {
+              // the old match, round and teams belong to the other event
+              settings.edc = {
+                eventId,
+                matchId: null,
+                roundId: null,
+                redEntrantId: null,
+                blueEntrantId: null,
+                qualifierEntrantId: null,
+              };
+            }),
+          )
+        }
+      />
+      <DataSelect
         label="Load match"
         value={settings.edc.matchId}
         options={matchOptions}
@@ -178,6 +204,69 @@ export function EdcMatchControls() {
         placeholder="Select"
         onSelect={(blueEntrantId) => setManually({ blueEntrantId })}
       />
+    </div>
+  );
+}
+
+/**
+ * Steps the Team Results screen through the qualifier standings: ▶ goes up
+ * towards #1 and then the summary of every team, as a results reveal does,
+ * ◀ back down. Only shown while that screen is on.
+ */
+export function EdcQualifierControls() {
+  const [settings, setSettings] = useSettings();
+  const { standings, summary, index } = useEdcQualifierTeam();
+
+  if (settings.activeScreen !== "qualteam") {
+    return null;
+  }
+
+  // the reveal from its end: the summary, #1, #2, ... last place
+  const steps: Option[] = standings.length
+    ? [
+        { value: QUALIFIER_SUMMARY, label: "Summary (every team)" },
+        ...standings.map((s) => ({
+          value: s.entrantId,
+          label: `#${s.rank} ${s.entrant?.name ?? "???"}`,
+        })),
+      ]
+    : [];
+  const current = summary ? 0 : index + 1;
+  const up = steps[current - 1];
+  const down = steps[current + 1];
+
+  const show = (value: string) =>
+    setSettings(
+      produce((settings) => {
+        settings.edc.qualifierEntrantId = value;
+      }),
+    );
+
+  return (
+    <div id="edc-qualifier-controls">
+      <DataSelect
+        label="Team"
+        value={steps[current]?.value ?? null}
+        options={steps}
+        placeholder={steps.length ? "Select" : "No qualifier results"}
+        onSelect={show}
+      />
+      <div className="switcher-select qualifier-steps">
+        <button
+          className="switcher-option"
+          disabled={!down}
+          onClick={() => down && show(down.value)}
+        >
+          ◀ {down?.label ?? "last place"}
+        </button>
+        <button
+          className="switcher-option"
+          disabled={!up}
+          onClick={() => up && show(up.value)}
+        >
+          {up?.label ?? "the end"} ▶
+        </button>
+      </div>
     </div>
   );
 }

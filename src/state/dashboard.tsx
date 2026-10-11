@@ -9,6 +9,7 @@ import {
   type SetStateAction,
 } from "react";
 
+import { EDC_EVENT_ID } from "~/edcEvents";
 import {
   dashboardMessageSchema,
   type DashboardMessage,
@@ -84,10 +85,12 @@ export function DashboardSettingsProvider({
     graphicsStyle: "EDC 2026",
     tournamentId: "36",
     edc: {
+      eventId: EDC_EVENT_ID,
       matchId: null,
       roundId: null,
       redEntrantId: null,
       blueEntrantId: null,
+      qualifierEntrantId: null,
     },
   });
 

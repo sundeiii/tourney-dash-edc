@@ -246,6 +246,17 @@ button:active {
   margin-left: 38px;
 }
 
+.switcher-group + .switcher-group {
+  margin-top: 20px;
+}
+
+.switcher-group-title {
+  font-size: 22px;
+  font-family: BenderBold, Helvetica, sans-serif;
+  color: white;
+  margin: 0 0 10px 44px;
+}
+
 .switcher-option {
   width: 207px;
   height: 52px;
@@ -736,4 +747,30 @@ button:active {
 
 #countdown-input::-webkit-calendar-picker-indicator {
   filter: invert(1);
+}
+
+/* Team Results stepping, under the scene switcher */
+#edc-qualifier-controls {
+  margin-top: 24px;
+}
+
+.qualifier-steps {
+  margin-top: 10px;
+}
+
+.qualifier-steps .switcher-option {
+  display: block;
+  padding: 0 12px;
+  line-height: 52px;
+  font-size: 18px;
+  text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: none;
+}
+
+.qualifier-steps .switcher-option:disabled {
+  opacity: 0.4;
+  cursor: default;
 }

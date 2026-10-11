@@ -1,17 +1,25 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import type { output, ZodType } from "zod";
 import {
   bracketSchema,
   eventViewSchema,
+  localPoolsSchema,
+  qualifierLobbiesSchema,
   qualifierScoresSchema,
   releasedPoolsSchema,
   usersSchema,
 } from "~/schemas/centaurea";
+import { osuMatchSchema, type OsuMatch } from "~/schemas/osuMatch";
 import { getAvatarUrl, getBeatmapBgUrl, preloadImage } from "~/util";
 import { useSettings } from "./dashboard";
+import { qualifierStandings } from "./qualifierStandings";
 
-export const EDC_EVENT_ID = "1564f3e6-2d2b-45d6-8990-a9e0b2a75588";
+/** the Centaurea event picked on the dashboard */
+function useEventId() {
+  const [{ edc }] = useSettings();
+  return edc.eventId;
+}
 
 // what fits above the cornflower border of the seedings background
 const SCHEDULE_SIZE = 4;
@@ -58,6 +66,9 @@ export type EdcRound = {
   bestOf: number;
   bansPerTeam: number;
   mappoolId: string | null;
+  // qualifier stages only
+  scoring: string | null;
+  advanceCount: number | null;
 };
 
 export type EdcQualifierResult = { score: number; placement: number };
@@ -101,10 +112,10 @@ const SIDE_LABELS: Record<string, string> = {
 };
 
 function useEventView() {
+  const eventId = useEventId();
   const query = useQuery({
-    queryKey: ["centaurea", "view", EDC_EVENT_ID],
-    queryFn: () =>
-      fetchCentaurea(`events/${EDC_EVENT_ID}/view`, eventViewSchema),
+    queryKey: ["centaurea", "view", eventId],
+    queryFn: () => fetchCentaurea(`events/${eventId}/view`, eventViewSchema),
   });
 
   if (query.error) {
@@ -196,10 +207,10 @@ export function useEdcEntrants() {
 }
 
 export function useEdcBracket() {
+  const eventId = useEventId();
   const query = useQuery({
-    queryKey: ["centaurea", "bracket", EDC_EVENT_ID],
-    queryFn: () =>
-      fetchCentaurea(`events/${EDC_EVENT_ID}/bracket`, bracketSchema),
+    queryKey: ["centaurea", "bracket", eventId],
+    queryFn: () => fetchCentaurea(`events/${eventId}/bracket`, bracketSchema),
   });
 
   if (query.error) {
@@ -229,6 +240,8 @@ export function useEdcBracket() {
           bestOf: round.best_of,
           bansPerTeam: round.bans,
           mappoolId: round.mappool_id ?? null,
+          scoring: stage.format.scoring ?? null,
+          advanceCount: stage.advance_count ?? null,
         };
         rounds.push(edcRound);
 
@@ -275,14 +288,16 @@ export function useEdcCurrentMatch() {
   };
 }
 
-function usePublicPools() {
+function useLocalPools() {
   const query = useQuery({
-    queryKey: ["centaurea", "pools", EDC_EVENT_ID],
-    queryFn: () =>
-      fetchCentaurea(
-        `events/${EDC_EVENT_ID}/mappools/public`,
-        releasedPoolsSchema,
-      ),
+    queryKey: ["local-pools"],
+    queryFn: async () => {
+      const response = await fetch("/local-pools");
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      return localPoolsSchema.parse(await response.json());
+    },
   });
 
   if (query.error) {
@@ -292,22 +307,47 @@ function usePublicPools() {
   return query.data;
 }
 
+/** Centaurea's released pools, plus unreleased ones dropped into pools/ */
+function usePools() {
+  const eventId = useEventId();
+  const query = useQuery({
+    queryKey: ["centaurea", "pools", eventId],
+    queryFn: () =>
+      fetchCentaurea(`events/${eventId}/mappools/public`, releasedPoolsSchema),
+  });
+
+  if (query.error) {
+    console.error(query.error);
+  }
+
+  const local = useLocalPools();
+
+  return useMemo(() => {
+    const pools = [...(query.data ?? [])];
+    for (const { slots } of local ?? []) {
+      const mappoolId = slots[0]!.mappool_id;
+      if (!pools.some((p) => p.mappool_id === mappoolId)) {
+        pools.push({ round_id: "", round_name: "", mappool_id: mappoolId, slots });
+      }
+    }
+    return pools;
+  }, [query.data, local]);
+}
+
 // several rounds can share one pool, so match on the pool before the round
 function poolForRound(
-  pools: ReturnType<typeof usePublicPools>,
+  pools: ReturnType<typeof usePools>,
   round: EdcRound | undefined,
 ) {
   return round
-    ? (pools?.find((p) => p.mappool_id === round.mappoolId) ??
-        pools?.find((p) => p.round_id === round.id))
+    ? (pools.find((p) => p.mappool_id === round.mappoolId) ??
+        pools.find((p) => p.round_id === round.id))
     : undefined;
 }
 
-/** each entrant's best score and placement on every qualifier map */
-export function useEdcQualifierStats() {
+function useQualifierScores() {
   const { rounds } = useEdcBracket();
   const qualifierRound = rounds.find((r) => r.qualifier);
-  const pool = poolForRound(usePublicPools(), qualifierRound);
 
   const query = useQuery({
     enabled: !!qualifierRound,
@@ -320,6 +360,22 @@ export function useEdcQualifierStats() {
         qualifierScoresSchema,
       ),
   });
+
+  const status = !qualifierRound
+    ? "none"
+    : query.error
+      ? "private"
+      : !query.data
+        ? "loading"
+        : "ready";
+
+  return { qualifierRound, query, status } as const;
+}
+
+/** each entrant's best score and placement on every qualifier map */
+export function useEdcQualifierStats() {
+  const { qualifierRound, query, status: scoresStatus } = useQualifierScores();
+  const pool = poolForRound(usePools(), qualifierRound);
 
   return useMemo(() => {
     const slots = (pool?.slots ?? [])
@@ -348,23 +404,266 @@ export function useEdcQualifierStats() {
         });
     }
 
-    const status = !qualifierRound
-      ? "none"
-      : query.error
-        ? "private"
-        : !query.data
-          ? "loading"
-          : slots.length === 0
-            ? "no-pool"
-            : "ready";
+    const status =
+      scoresStatus === "ready" && slots.length === 0 ? "no-pool" : scoresStatus;
 
     return { status, slots, results, entrantCount: results.size } as const;
-  }, [pool, query.data, query.error, qualifierRound]);
+  }, [pool, query.data, scoresStatus]);
+}
+
+// module-level so useQueries can keep its combined result between renders
+const matchDataOf = (results: { data: OsuMatch | undefined }[]) =>
+  results.map((r) => r.data);
+
+type PlayerQualifierScores = {
+  // over all the qualifier maps
+  average: number;
+  // by slot id
+  maps: Map<string, number>;
+};
+
+/**
+ * each player's scores on the qualifier maps, from the lobbies' osu! matches,
+ * keyed by Centaurea user id; Centaurea itself only keeps team totals
+ */
+function useQualifierPlayerScores() {
+  const eventId = useEventId();
+  const { qualifierRound } = useQualifierScores();
+  const pool = poolForRound(usePools(), qualifierRound);
+  const { entrants } = useEdcEntrants();
+
+  const lobbies = useQuery({
+    queryKey: ["centaurea", "qualifier-lobbies", eventId],
+    queryFn: () =>
+      fetchCentaurea(`events/${eventId}/qualifier-lobbies`, qualifierLobbiesSchema),
+  });
+
+  const matchData = useQueries({
+    queries: (lobbies.data ?? [])
+      .flatMap((lobby) => (lobby.osu_mp_id ? [lobby.osu_mp_id] : []))
+      .map((id) => ({
+        queryKey: ["osu-match", id],
+        // the server answers 503 while osu! is throttling it
+        retry: 4,
+        retryDelay: (attempt: number) => 5000 * 2 ** attempt,
+        queryFn: async () => {
+          const response = await fetch(`/osu-match/${id}`);
+          if (!response.ok) {
+            throw new Error(`osu! match ${id}: ${response.status}`);
+          }
+          return osuMatchSchema.parse(await response.json());
+        },
+      })),
+    combine: matchDataOf,
+  });
+
+  return useMemo(() => {
+    const players = new Map<string, PlayerQualifierScores>();
+    const slots = (pool?.slots ?? []).toSorted((a, b) => a.position - b.position);
+    if (slots.length === 0) {
+      return players;
+    }
+
+    const memberByOsuId = new Map(
+      entrants.flatMap((e) =>
+        e.members.flatMap((m) => (m.osuId ? [[m.osuId, m.id] as const] : [])),
+      ),
+    );
+
+    // each player's best run on every map; a lobby is one run, and within it
+    // a replayed map's last play counts, as Centaurea counts it
+    const best = new Map<string, Map<string, number>>();
+    for (const match of matchData) {
+      if (!match) {
+        continue;
+      }
+      const run = new Map<string, Map<string, number>>();
+
+      // unsubmitted tourney edits come through as beatmap 0; they take the
+      // pool's other maps in order, as a lobby plays the pool in order
+      const submitted = match.games.filter((g) => g.beatmapId > 0);
+      const unclaimed = slots.filter(
+        (s) => !submitted.some((g) => g.beatmapId === s.beatmap_id),
+      );
+      let nextUnclaimed = 0;
+
+      for (const game of match.games) {
+        const slot =
+          game.beatmapId > 0
+            ? slots.find((s) => s.beatmap_id === game.beatmapId)
+            : unclaimed[nextUnclaimed++];
+        if (!slot) {
+          continue;
+        }
+
+        for (const { userId, score } of game.scores) {
+          const memberId = memberByOsuId.get(userId);
+          if (!memberId) {
+            continue;
+          }
+          const scores = run.get(memberId) ?? new Map<string, number>();
+          run.set(memberId, scores);
+          scores.set(slot.id, score);
+        }
+      }
+
+      for (const [memberId, runScores] of run) {
+        const scores = best.get(memberId) ?? new Map<string, number>();
+        best.set(memberId, scores);
+        for (const [slotId, score] of runScores) {
+          scores.set(slotId, Math.max(scores.get(slotId) ?? 0, score));
+        }
+      }
+    }
+
+    // like Centaurea's average score, a map someone didn't play counts as 0
+    for (const [memberId, maps] of best) {
+      const total = [...maps.values()].reduce((a, b) => a + b, 0);
+      players.set(memberId, { average: total / slots.length, maps });
+    }
+    return players;
+  }, [pool, entrants, matchData]);
+}
+
+/** the qualifier stage's final standings, ranked like Centaurea ranks them */
+export function useEdcQualifierStandings() {
+  const { qualifierRound, query, status } = useQualifierScores();
+  const { byId } = useEdcEntrants();
+  const playerScores = useQualifierPlayerScores();
+  const method = qualifierRound?.scoring ?? "average_score";
+
+  const standings = useMemo(
+    () =>
+      qualifierStandings(method, query.data ?? []).map((standing) => {
+        const entrant = byId.get(standing.entrantId);
+        return {
+          ...standing,
+          entrant,
+          players: (entrant?.members ?? []).map((member) => ({
+            name: member.name,
+            avatarUrl: member.avatarUrl,
+            // null while the lobby's osu! match isn't linked or loaded
+            average: playerScores.get(member.id)?.average ?? null,
+            maps: playerScores.get(member.id)?.maps ?? null,
+          })),
+        };
+      }),
+    [method, query.data, byId, playerScores],
+  );
+
+  return {
+    status:
+      status === "ready" && standings.length === 0 ? "no-scores" : status,
+    method,
+    advanceCount: qualifierRound?.advanceCount ?? null,
+    standings,
+  } as const;
+}
+
+// the step after #1 on the Team Results screen, showing every team
+export const QUALIFIER_SUMMARY = "summary";
+
+/**
+ * the team the dashboard is stepping through the qualifier results with,
+ * and its run map by map; with none picked yet it's last place, where a
+ * results reveal starts, and the step after #1 is the summary
+ */
+export function useEdcQualifierTeam() {
+  const [{ edc }] = useSettings();
+  const results = useEdcQualifierStandings();
+  const { qualifierRound } = useQualifierScores();
+  const pool = poolForRound(usePools(), qualifierRound);
+  const { standings } = results;
+
+  const summary = edc.qualifierEntrantId === QUALIFIER_SUMMARY;
+  const picked = standings.findIndex((s) => s.entrantId === edc.qualifierEntrantId);
+  const index = summary ? -1 : picked === -1 ? standings.length - 1 : picked;
+  const team = summary ? undefined : standings[index];
+
+  const maps = useMemo(
+    () =>
+      (pool?.slots ?? [])
+        .toSorted((a, b) => a.position - b.position)
+        .map((slot) => ({
+          id: slot.id,
+          code: slot.code.toUpperCase(),
+          mod: slot.game_mod.toUpperCase(),
+          title: slot.snapshot.title ?? "",
+          result: team?.maps[slot.id],
+          playerScores: (team?.players ?? []).map(
+            (p) => p.maps?.get(slot.id) ?? null,
+          ),
+        })),
+    [pool, team],
+  );
+
+  return {
+    ...results,
+    status:
+      results.status === "ready" && maps.length === 0 ? "no-pool" : results.status,
+    summary,
+    index,
+    team,
+    maps,
+  } as const;
+}
+
+export function useEdcLinks() {
+  return useEventView()?.links ?? [];
+}
+
+/** which pool slot an osu! beatmap is, if it's in one */
+export function useEdcSlotForBeatmap(beatmap: {
+  id: number;
+  artist: string;
+  title: string;
+  difficulty: string;
+}) {
+  const pools = usePools();
+  const { rounds } = useEdcBracket();
+
+  const same = (a: string | null | undefined, b: string) =>
+    a?.trim().toLowerCase() === b.trim().toLowerCase();
+
+  for (const pool of pools) {
+    // tourney edits are unsubmitted (osu! reports id 0) and get renamed
+    // difficulties, so fall back to artist + title, preferring a slot whose
+    // difficulty name is part of the loaded one if the song is pooled twice
+    const byName = pool.slots.filter(
+      (s) =>
+        same(s.snapshot.artist, beatmap.artist) &&
+        same(s.snapshot.title, beatmap.title),
+    );
+    const slot =
+      (beatmap.id > 0
+        ? pool.slots.find((s) => s.beatmap_id === beatmap.id)
+        : undefined) ??
+      byName.find(
+        (s) =>
+          s.snapshot.difficulty &&
+          beatmap.difficulty
+            .toLowerCase()
+            .includes(s.snapshot.difficulty.toLowerCase()),
+      ) ??
+      (byName.length === 1 ? byName[0] : undefined);
+    if (slot) {
+      return {
+        code: slot.code.toUpperCase(),
+        mod: slot.game_mod.toUpperCase(),
+        // local pools don't say which round they're for; the bracket does
+        roundName:
+          pool.round_name ||
+          (rounds.find((r) => r.mappoolId === pool.mappool_id)?.name ?? ""),
+      };
+    }
+  }
+
+  return undefined;
 }
 
 export function useEdcMappool() {
   const { round } = useEdcCurrentMatch();
-  const pool = poolForRound(usePublicPools(), round);
+  const pool = poolForRound(usePools(), round);
 
   const groups = useMemo(() => {
     const groups: { mod: string; maps: EdcBeatmap[] }[] = [];

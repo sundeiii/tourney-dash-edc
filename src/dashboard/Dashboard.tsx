@@ -19,7 +19,56 @@ import {
 } from "~/state/huis";
 import { useTosu } from "~/state/tosu";
 import { motion } from "motion/react";
-import { EdcMatchControls } from "./EdcMatchControls";
+import { EdcMatchControls, EdcQualifierControls } from "./EdcMatchControls";
+
+const SCENE_LABELS: Record<ScreenName, string> = {
+  startingsoon: "Starting Soon",
+  start: "Start",
+  standby: "Standby",
+  playerinfo: "Player Info",
+  versus: "Versus",
+  scheduling: "Scheduling",
+  mappool: "Mappool",
+  showcase: "Mappool Reveal",
+  qualresults: "Qualifier Results",
+  qualteam: "Team Results",
+  winnersbracket: "Winners Bracket",
+  losersbracket: "Losers Bracket",
+  winner: "Winner",
+  brb: "Be Right Back",
+  technical: "Technical Issues",
+  ending: "Ending",
+};
+
+// non-match streams (pool reveals, qualifier results) vs match days, plus
+// the holding screens either kind of stream can need
+const SCENE_GROUPS = [
+  { key: "stream", title: "Stream & Reveals" },
+  { key: "match", title: "Match" },
+  { key: "break", title: "Breaks" },
+] as const;
+
+const SCENE_GROUP: Record<
+  ScreenName,
+  (typeof SCENE_GROUPS)[number]["key"]
+> = {
+  startingsoon: "stream",
+  showcase: "stream",
+  qualresults: "stream",
+  qualteam: "stream",
+  ending: "stream",
+  brb: "break",
+  technical: "break",
+  start: "match",
+  standby: "match",
+  playerinfo: "match",
+  versus: "match",
+  scheduling: "match",
+  mappool: "match",
+  winnersbracket: "match",
+  losersbracket: "match",
+  winner: "match",
+};
 
 export function Dashboard() {
   const [settings] = useSettings();
@@ -42,6 +91,7 @@ function EdcDashboard() {
     <DashboardView
       mappoolOptions={mappoolOptions}
       matchSelect={<EdcMatchControls />}
+      sceneControls={<EdcQualifierControls />}
     />
   );
 }
@@ -152,12 +202,15 @@ function HuisMatchSelect() {
 type DashboardViewProps = {
   mappoolOptions: string[];
   matchSelect: ReactNode;
+  // controls for whichever scene is on, under the scene switcher
+  sceneControls?: ReactNode;
   showTournamentId?: boolean;
 };
 
 function DashboardView({
   mappoolOptions,
   matchSelect,
+  sceneControls,
   showTournamentId = false,
 }: DashboardViewProps) {
   const {
@@ -390,30 +443,25 @@ function DashboardView({
       {/* Scene Switcher */}
       <div id="scene-switcher">
         <div className="section-title">Scene Switcher</div>
-        <div className="switcher-select">
-          {screenNames.map((scene) => {
-            const label = scene
-              .replace(/^start$/i, "Start")
-              .replace(/^standby$/i, "Standby")
-              .replace(/^playerinfo$/i, "Player Info")
-              .replace(/^versus$/i, "Versus")
-              .replace(/^scheduling$/i, "Scheduling")
-              .replace(/^mappool$/i, "Mappool")
-              .replace(/^winnersbracket$/i, "Winners Bracket")
-              .replace(/^losersbracket$/i, "Losers Bracket")
-              .replace(/^winner$/i, "Winner");
-
-            return (
-              <button
-                key={scene}
-                className={`switcher-option ${settings.activeScreen === scene ? "selected" : ""}`}
-                onClick={() => setSelectedScreen(scene)}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
+        {SCENE_GROUPS.map((group) => (
+          <div key={group.title} className="switcher-group">
+            <div className="switcher-group-title">{group.title}</div>
+            <div className="switcher-select">
+              {screenNames
+                .filter((scene) => SCENE_GROUP[scene] === group.key)
+                .map((scene) => (
+                  <button
+                    key={scene}
+                    className={`switcher-option ${settings.activeScreen === scene ? "selected" : ""}`}
+                    onClick={() => setSelectedScreen(scene)}
+                  >
+                    {SCENE_LABELS[scene]}
+                  </button>
+                ))}
+            </div>
+          </div>
+        ))}
+        {sceneControls}
       </div>
       <div className="divider"></div>
 

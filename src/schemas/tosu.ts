@@ -138,6 +138,7 @@ export const tosuApiResponseSchema = z
         clients: tourney.clients,
       },
       beatmap: {
+        id: beatmap.id,
         title: beatmap.title,
         artist: beatmap.artist,
         setId: beatmap.set,

@@ -1,4 +1,5 @@
 import z from "zod";
+import { EDC_EVENT_ID } from "~/edcEvents";
 import { screenNameSchema } from "./screens";
 
 export const playerSchema = z.literal(["player1", "player2"]);
@@ -10,10 +11,13 @@ export const playerSettingsSchema = z.object({
 
 // Centaurea ids; the entrant ids are roster entrant ids, as bracket matches use
 export const edcSettingsSchema = z.object({
+  eventId: z.string().default(EDC_EVENT_ID),
   matchId: z.string().nullable(),
   roundId: z.string().nullable(),
   redEntrantId: z.string().nullable(),
   blueEntrantId: z.string().nullable(),
+  // the team the qualifier Team Results screen shows, or "summary" for all
+  qualifierEntrantId: z.string().nullable().default(null),
 });
 
 export type EdcSettings = z.infer<typeof edcSettingsSchema>;

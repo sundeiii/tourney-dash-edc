@@ -18,6 +18,16 @@ export const qualifierScoresSchema = z.array(
   }),
 );
 
+// public even while the scores themselves aren't
+export const qualifierLobbiesSchema = z.array(
+  z.object({
+    id: z.string(),
+    // a stable match id or a lazer room id, once staff link the lobby
+    osu_mp_id: z.string().nullish(),
+    entrant_ids: z.array(z.string()),
+  }),
+);
+
 export type CentaureaUser = z.infer<typeof userSchema>;
 
 const teamSchema = z.object({
@@ -48,6 +58,14 @@ export const eventViewSchema = z.object({
   }),
   roster: z.array(rosterRowSchema),
   teams: z.array(teamSchema),
+  links: z.array(
+    z.object({
+      // osu | discord | web
+      kind: z.string(),
+      label: z.string(),
+      url: z.string(),
+    }),
+  ),
 });
 
 const matchSchema = z.object({
@@ -85,8 +103,14 @@ export const bracketSchema = z.array(
       id: z.string(),
       name: z.string(),
       position: z.number(),
-      // qualifier | elimination
-      format: z.object({ kind: z.string() }),
+      // how many entrants a qualifier stage sends on
+      advance_count: z.number().nullish(),
+      format: z.object({
+        // qualifier | elimination
+        kind: z.string(),
+        // qualifier ranking method, e.g. average_score | z_sum
+        scoring: z.string().nullish(),
+      }),
     }),
     rounds: z.array(
       z.object({
@@ -99,6 +123,7 @@ export const bracketSchema = z.array(
 
 const slotSchema = z.object({
   id: z.string(),
+  mappool_id: z.string(),
   code: z.string(),
   game_mod: z.string(),
   position: z.number(),
@@ -115,7 +140,13 @@ const slotSchema = z.object({
 export const releasedPoolsSchema = z.array(
   z.object({
     round_id: z.string(),
+    round_name: z.string(),
     mappool_id: z.string(),
     slots: z.array(slotSchema),
   }),
+);
+
+// a staff export of an unreleased pool (GET /mappools/{id}/full), from pools/
+export const localPoolsSchema = z.array(
+  z.object({ slots: z.array(slotSchema).min(1) }),
 );

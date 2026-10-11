@@ -50,6 +50,7 @@ export function TosuProvider({ children }: { children: ReactNode }) {
       clients: [],
     },
     beatmap: {
+      id: 0,
       title: "loading...",
       artist: "loading...",
       difficulty: "loading...",

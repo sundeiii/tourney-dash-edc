@@ -99,7 +99,7 @@ p {
   transition: opacity 0.2s ease;
 }
 
-#bg-mask {
+.bg-mask {
   position: absolute;
   width: 1920px;
   height: 1080px;
@@ -2002,7 +2002,8 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
 .pi-code.fm { color: #6effe0; }
 .pi-code.tb { color: var(--edc-blue-light); }
 
-.pi-empty {
+.pi-empty,
+.qr-empty {
   position: absolute;
   top: 600px;
   left: 0;
@@ -2382,4 +2383,629 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   font-size: 32px;
   font-family: Exo2Bold, Helvetica, sans-serif;
   color: #FFFFFF;
+}
+
+/* STARTING SOON + ENDING — on the seedings background, above its cornflowers */
+
+.bookend {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bookend-title {
+  width: 1760px;
+  margin-top: 250px;
+  text-align: center;
+  font-size: 160px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1;
+  letter-spacing: 4px;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.bookend-subtitle {
+  margin-top: 18px;
+  font-size: 44px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+}
+
+.bookend-countdown {
+  margin-top: 18px;
+  font-size: 96px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+}
+
+.bookend-link {
+  margin-top: 40px;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  padding: 10px 32px 12px;
+  background: var(--edc-black);
+}
+
+.bookend-link-label {
+  font-size: 26px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+  text-transform: uppercase;
+}
+
+.bookend-link-url {
+  font-size: 40px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+}
+
+.bookend-song {
+  max-width: 1300px;
+  font-size: 36px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.up-next {
+  position: absolute;
+  top: 640px;
+  left: 410px;
+  width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.up-next-label {
+  text-align: center;
+  font-size: 26px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  letter-spacing: 3px;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+
+.up-next-row {
+  box-sizing: border-box;
+  height: 60px;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr 160px;
+  align-items: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.up-next-team {
+  --team-color: #dc1f2b;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.up-next-team.blue {
+  --team-color: #1f55dc;
+  flex-direction: row-reverse;
+}
+
+.up-next-team img {
+  box-sizing: border-box;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border: 3px solid var(--team-color);
+}
+
+.up-next-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 26px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.up-next-team.blue .up-next-name {
+  text-align: right;
+}
+
+.up-next-vs {
+  text-align: center;
+  font-size: 22px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: var(--label);
+  text-transform: uppercase;
+}
+
+.up-next-time {
+  text-align: right;
+  font-size: 24px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: #FFFFFF;
+}
+
+/* MAPPOOL REVEAL — the info sits in the showcase background's white bar,
+   left of its cornflower, on top of the full-screen osu! capture */
+
+.reveal-bar {
+  position: absolute;
+  top: 973px;
+  left: 0;
+  width: 1800px;
+  height: 107px;
+  display: flex;
+  align-items: center;
+}
+
+.reveal-slot {
+  flex: 0 0 220px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: var(--edc-black);
+}
+
+.reveal-code {
+  font-size: 54px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1;
+  color: #FFFFFF;
+}
+
+.reveal-code.nm { color: #6e97ff; }
+.reveal-code.hd { color: #fff36e; }
+.reveal-code.hr { color: #ff6e6e; }
+.reveal-code.dt,
+.reveal-code.nc { color: #b46eff; }
+.reveal-code.fm { color: #6effe0; }
+.reveal-code.tb { color: var(--edc-blue-light); }
+
+.reveal-pool {
+  font-size: 16px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+  text-transform: uppercase;
+}
+
+.reveal-info {
+  flex: 1;
+  min-width: 0;
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reveal-title,
+.reveal-meta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reveal-title {
+  font-size: 40px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #111111;
+}
+
+.reveal-meta {
+  font-size: 22px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: #555555;
+}
+
+.reveal-stats {
+  flex: 0 0 640px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  text-align: center;
+}
+
+.reveal-stat-label {
+  font-size: 16px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: #777777;
+  text-transform: uppercase;
+}
+
+.reveal-stat-value {
+  font-size: 34px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: var(--edc-blue);
+}
+
+/* QUALIFIER RESULTS — two columns between the logo and the seedings
+   background's cornflowers; --row-h comes from how many teams there are */
+
+.qr-title {
+  position: absolute;
+  top: 48px;
+  left: 60px;
+  font-size: 48px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+
+.qr-meta {
+  position: absolute;
+  top: 62px;
+  right: 60px;
+  font-size: 26px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+}
+
+.qr-meta b {
+  font-family: Exo2Black, Helvetica, sans-serif;
+  font-weight: normal;
+  color: #FFFFFF;
+}
+
+.qr-table {
+  position: absolute;
+  top: 170px;
+  left: 60px;
+  width: 1800px;
+  height: 720px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(var(--rows), 1fr);
+  grid-auto-flow: column;
+  column-gap: 60px;
+}
+
+.qr-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: calc(var(--row-h) * 1.3) var(--row-h) 1fr auto;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.qr-row.out {
+  opacity: 0.45;
+}
+
+.qr-rank {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--edc-black);
+  font-size: calc(var(--row-h) * 0.5);
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+}
+
+.qr-row.out .qr-rank {
+  background: none;
+}
+
+.qr-avatar {
+  width: calc(var(--row-h) - 14px);
+  height: calc(var(--row-h) - 14px);
+  margin-left: 14px;
+  object-fit: cover;
+}
+
+.qr-team {
+  min-width: 0;
+  padding: 0 20px 0 18px;
+}
+
+.qr-name,
+.qr-members {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.15;
+}
+
+.qr-name {
+  font-size: calc(var(--row-h) * 0.42);
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+}
+
+.qr-members {
+  font-size: calc(var(--row-h) * 0.28);
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+}
+
+/* a player's own average score */
+.qr-members b {
+  font-family: Exo2Black, Helvetica, sans-serif;
+  font-weight: normal;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+}
+
+.qr-value {
+  padding-right: 24px;
+  font-size: calc(var(--row-h) * 0.42);
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+}
+
+/* QUALIFIER TEAM — one team's run: the team on the left, its maps on the
+   right, between the logo and the seedings background's cornflowers */
+
+.qt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+}
+
+.qt-label {
+  font-size: 18px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.qt-team {
+  position: absolute;
+  top: 170px;
+  left: 60px;
+  width: 560px;
+  height: 720px;
+  display: flex;
+  flex-direction: column;
+}
+
+.qt-head {
+  display: flex;
+  height: 180px;
+}
+
+.qt-rank {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--edc-black);
+  font-size: 120px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1;
+  color: #FFFFFF;
+}
+
+.qt-rank-hash {
+  font-size: 64px;
+  color: var(--label);
+  margin-right: 4px;
+}
+
+.qt-avatar {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+}
+
+.qt-name {
+  width: 560px;
+  margin-top: 22px;
+  font-size: 56px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1.1;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.qt-status {
+  align-self: flex-start;
+  margin-top: 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 6px 18px 8px;
+  background: var(--edc-black);
+  font-size: 22px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+
+.qt-status span {
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+  text-transform: none;
+}
+
+.qt-status.out {
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--label);
+}
+
+.qt-overall {
+  margin-top: 28px;
+}
+
+.qt-overall-value {
+  font-size: 64px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1.05;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+}
+
+.qt-players {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.qt-player {
+  height: 84px;
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  align-items: center;
+  gap: 20px;
+  padding-right: 22px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.qt-player img {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+}
+
+.qt-player-name {
+  min-width: 0;
+  font-size: 34px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.qt-player-avg {
+  text-align: right;
+  font-size: 32px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1.1;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+}
+
+.qt-maps {
+  --cols: 110px minmax(0, 1fr) 190px 110px repeat(var(--players), 180px);
+  position: absolute;
+  top: 170px;
+  left: 680px;
+  width: 1180px;
+  height: 720px;
+  display: grid;
+  grid-template-rows: 36px repeat(var(--maps), 1fr);
+  row-gap: 6px;
+}
+
+.qt-maps-head,
+.qt-map {
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: center;
+}
+
+.qt-maps-head {
+  font-size: 18px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.qt-maps-head .right,
+.qt-maps-player {
+  text-align: right;
+  padding-right: 20px;
+}
+
+.qt-maps-head .center {
+  text-align: center;
+}
+
+.qt-maps-player {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-transform: none;
+}
+
+.qt-map {
+  height: 100%;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.qt-code {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--edc-black);
+  font-size: 28px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+}
+
+.qt-code.nm { color: #6e97ff; }
+.qt-code.hd { color: #fff36e; }
+.qt-code.hr { color: #ff6e6e; }
+.qt-code.dt,
+.qt-code.nc { color: #b46eff; }
+.qt-code.fm { color: #6effe0; }
+.qt-code.tb { color: var(--edc-blue-light); }
+
+.qt-map-title {
+  min-width: 0;
+  padding: 0 20px;
+  font-size: 22px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.qt-score {
+  text-align: right;
+  padding-right: 20px;
+  font-size: 30px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+}
+
+.qt-place {
+  justify-self: center;
+  min-width: 64px;
+  padding: 2px 10px 4px;
+  text-align: center;
+  font-size: 26px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+}
+
+/* a top-three finish on the map */
+.qt-place.top {
+  background: #FFFFFF;
+  color: var(--edc-blue);
+}
+
+.qt-player-score {
+  text-align: right;
+  padding-right: 20px;
+  font-size: 24px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
 }
