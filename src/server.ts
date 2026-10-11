@@ -10,6 +10,8 @@ import {
 } from "./schemas/settings";
 import { isProduction } from "./util";
 
+const CENTAUREA_API = "https://api.centaurea.ee/api/v1";
+
 const args = parseArgs({
   args: process.argv,
   options: {
@@ -81,6 +83,30 @@ async function run() {
         }
 
         return new Response(file);
+      },
+      // Centaurea only allows its own origin via CORS, so the overlay goes through us
+      "/centaurea/*": async (req) => {
+        if (req.method !== "GET") {
+          return new Response("Method not allowed", { status: 405 });
+        }
+
+        const url = new URL(req.url);
+        const path = url.pathname.replace(/^\/centaurea\//, "");
+        if (!/^[\w-]+(\/[\w-]+)*$/.test(path)) {
+          return new Response("Bad path", { status: 400 });
+        }
+
+        const upstream = await fetch(`${CENTAUREA_API}/${path}${url.search}`, {
+          headers: { accept: "application/json" },
+        });
+
+        return new Response(upstream.body, {
+          status: upstream.status,
+          headers: {
+            "content-type":
+              upstream.headers.get("content-type") ?? "application/json",
+          },
+        });
       },
       "/favicon.ico": () => new Response(null, { status: 204 }),
       "/": index,

@@ -29,9 +29,11 @@ function AppContent() {
     existingLinks.forEach((link) => link.remove());
 
     const cssPath =
-      settings.graphicsStyle === "NDC 2026"
-        ? "./versions/ndc2026/static/style.css"
-        : "./versions/ndc2025/static/style.css";
+      settings.graphicsStyle === "EDC 2026"
+        ? "./versions/edc2026/static/style.css"
+        : settings.graphicsStyle === "NDC 2026"
+          ? "./versions/ndc2026/static/style.css"
+          : "./versions/ndc2025/static/style.css";
 
     const link = document.createElement("link");
     link.rel = "stylesheet";

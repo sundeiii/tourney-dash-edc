@@ -1,5 +1,5 @@
 import { AnimatePresence } from "motion/react";
-import { usePreload } from "~/preload";
+import { EdcPreload, HuisPreload } from "~/preload";
 import { useSettings } from "~/state/dashboard";
 import { MappoolScreen as MappoolScreen2025 } from "./versions/ndc2025/screens/Mappools";
 import { SchedulingScreen as SchedulingScreen2025 } from "./versions/ndc2025/screens/Scheduling";
@@ -16,16 +16,36 @@ import { WinnerScreen as WinnerScreen2026 } from "./versions/ndc2026/screens/Win
 import { PlayerInfoScreen as PlayerInfoScreen2026 } from "./versions/ndc2026/screens/PlayerInfoScreen";
 import { WinnersBracketScreen as WinnersBracketScreen2026 } from "./versions/ndc2026/screens/WinnersBracketScreen";
 import { LosersBracketScreen as LosersBracketScreen2026 } from "./versions/ndc2026/screens/LosersBracketScreen";
+import { MappoolScreen as MappoolScreenEDC2026 } from "./versions/edc2026/screens/Mappools";
+import { SchedulingScreen as SchedulingScreenEDC2026 } from "./versions/edc2026/screens/Scheduling";
+import { StandbyScreen as StandbyScreenEDC2026 } from "./versions/edc2026/screens/Standby";
+import { StartScreen as StartScreenEDC2026 } from "./versions/edc2026/screens/Startscreen";
+import { VersusScreen as VersusScreenEDC2026 } from "./versions/edc2026/screens/Versus";
+import { WinnerScreen as WinnerScreenEDC2026 } from "./versions/edc2026/screens/Winner";
+import { PlayerInfoScreen as PlayerInfoScreenEDC2026 } from "./versions/edc2026/screens/PlayerInfoScreen";
+import { WinnersBracketScreen as WinnersBracketScreenEDC2026 } from "./versions/edc2026/screens/WinnersBracketScreen";
+import { LosersBracketScreen as LosersBracketScreenEDC2026 } from "./versions/edc2026/screens/LosersBracketScreen";
+import { Backdrop as BackdropEDC2026 } from "./versions/edc2026/components/Backdrop";
 
 export function Screens() {
-  usePreload();
-
   const [settings] = useSettings();
   const activeScreen = settings.activeScreen;
   const previous = settings.previousScreen;
 
   const screenSet =
-    settings.graphicsStyle === "NDC 2026"
+    settings.graphicsStyle === "EDC 2026"
+      ? {
+          start: StartScreenEDC2026,
+          standby: StandbyScreenEDC2026,
+          playerinfo: PlayerInfoScreenEDC2026,
+          versus: VersusScreenEDC2026,
+          scheduling: SchedulingScreenEDC2026,
+          mappool: MappoolScreenEDC2026,
+          winnersbracket: WinnersBracketScreenEDC2026,
+          losersbracket: LosersBracketScreenEDC2026,
+          winner: WinnerScreenEDC2026,
+        }
+      : settings.graphicsStyle === "NDC 2026"
       ? {
           start: StartScreen2026,
           standby: StandbyScreen2026,
@@ -53,6 +73,14 @@ export function Screens() {
 
   return (
     <div style={{ position: "relative", width: "1920px", height: "1080px" }}>
+      {settings.graphicsStyle === "EDC 2026" ? (
+        <>
+          <EdcPreload />
+          <BackdropEDC2026 screen={activeScreen} />
+        </>
+      ) : (
+        <HuisPreload />
+      )}
       <AnimatePresence mode="wait" initial={false}>
         {activeScreen === "start" && (
           <ActiveScreen key="start" from={previous} to="start" />

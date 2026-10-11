@@ -1,0 +1,42 @@
+import { motion } from "motion/react";
+import { useTosu } from "~/state/tosu";
+
+export function Chat() {
+  const { tourney } = useTosu();
+
+  const chat = tourney.chat;
+
+  return (
+    <div id="chat">
+      {chat
+        .filter((msg: any) => msg.team !== "bot" || String(msg.message).includes("rolls"))
+        .map((msg: any, idx: number) => (
+          <motion.div
+            className="chat-message"
+            key={msg.id ?? idx}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            layout
+          >
+            <div
+              className="chat-username"
+              style={{
+                color:
+                  msg.team === "left"
+                    ? "#FD515C"
+                    : msg.team === "right"
+                      ? "#5583F9"
+                      : "#66B2FF",
+              }}
+            >
+              {msg.name}:
+            </div>
+            <div className="chat-text">{msg.message}</div>
+          </motion.div>
+        ))}
+
+      <div className="chat-overlay"></div>
+    </div>
+  );
+}

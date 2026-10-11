@@ -1,8 +1,16 @@
 import dayjs from "dayjs";
 import { produce } from "immer";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import type { Match } from "~/schemas/huis";
 import { screenNames, type ScreenName } from "~/schemas/screens";
+import { useEdcMappool } from "~/state/centaurea";
 import { useSettings } from "~/state/dashboard";
 import {
   useMappoolQuery,
@@ -11,16 +19,56 @@ import {
 } from "~/state/huis";
 import { useTosu } from "~/state/tosu";
 import { motion } from "motion/react";
+import { EdcMatchControls } from "./EdcMatchControls";
 
 export function Dashboard() {
+  const [settings] = useSettings();
+
+  return settings.graphicsStyle === "EDC 2026" ? (
+    <EdcDashboard />
+  ) : (
+    <HuisDashboard />
+  );
+}
+
+function EdcDashboard() {
+  const { groups } = useEdcMappool();
+  const mappoolOptions = useMemo(
+    () => groups.flatMap((g) => g.maps.map((m) => m.code)),
+    [groups],
+  );
+
+  return (
+    <DashboardView
+      mappoolOptions={mappoolOptions}
+      matchSelect={<EdcMatchControls />}
+    />
+  );
+}
+
+function HuisDashboard() {
+  const { beatmaps } = useMappoolQuery();
+  const mappoolOptions = useMemo(
+    () =>
+      Object.values(beatmaps)
+        .flat()
+        .map((map) => `${map.modBracket}${map.modBracketIndex}`),
+    [beatmaps],
+  );
+
+  return (
+    <DashboardView
+      mappoolOptions={mappoolOptions}
+      matchSelect={<HuisMatchSelect />}
+      showTournamentId
+    />
+  );
+}
+
+function HuisMatchSelect() {
   const { matches } = useMatchesQuery();
   const schedule = useScheduleQuery();
-  const {
-    tourney: { chat },
-  } = useTosu();
   const [settings, setSettings] = useSettings();
-
-  const _autoselect = settings.automaticSelect;
 
   // default to the next upcoming match on startup
   useEffect(() => {
@@ -42,7 +90,82 @@ export function Dashboard() {
       : "Select";
   }, [matches, settings.matchId]);
 
-  const graphicsStyles = ["NDC 2026", "NDC 2025"] as const;
+  const setSelectedMatch = (match: Match) =>
+    setSettings(
+      produce((settings) => {
+        settings.matchId = match.uid;
+        settings.countdown = match.date;
+
+        if (match.date && match.date < Date.now()) {
+          settings.showCountdown = false;
+        }
+      }),
+    );
+
+  const [matchIsOpen, setMatchOpen] = useState(false);
+  const matchDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        matchDropdownRef.current &&
+        !matchDropdownRef.current.contains(e.target as Node)
+      )
+        setMatchOpen(false);
+    };
+
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  return (
+    <div id="match-select">
+      <div id="match-select-id" ref={matchDropdownRef}>
+        <div id="match-select-id-text">Select a match:</div>
+        <div
+          id="match-select-id-input"
+          className={matchIsOpen ? "open" : ""}
+          onClick={() => setMatchOpen(!matchIsOpen)}
+        >
+          {selectedMatch}
+        </div>
+        <div
+          className={`match-select-dropdown-options ${matchIsOpen ? "show" : ""}`}
+        >
+          {matches?.map((match) => (
+            <div
+              key={match.uid}
+              onClick={() => {
+                setSelectedMatch(match);
+                setMatchOpen(false);
+              }}
+            >
+              {`${match.uid} ${match.player1.name} - ${match.player2.name}`}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type DashboardViewProps = {
+  mappoolOptions: string[];
+  matchSelect: ReactNode;
+  showTournamentId?: boolean;
+};
+
+function DashboardView({
+  mappoolOptions,
+  matchSelect,
+  showTournamentId = false,
+}: DashboardViewProps) {
+  const {
+    tourney: { chat },
+  } = useTosu();
+  const [settings, setSettings] = useSettings();
+
+  const graphicsStyles = ["EDC 2026", "NDC 2026", "NDC 2025"] as const;
   const tournamentOptions = ["36", "31"] as const;
 
   const [graphicsStyleOpen, setGraphicsStyleOpen] = useState(false);
@@ -51,13 +174,6 @@ export function Dashboard() {
   const tournamentIdRef = useRef<HTMLDivElement>(null);
 
   const countdownDate = dayjs(settings.countdown).format("HH:mm");
-
-  const setAutoselect = (value: boolean) =>
-    setSettings(
-      produce((settings) => {
-        settings.automaticSelect = value;
-      }),
-    );
 
   const setSelectedScreen = (screen: ScreenName) =>
     setSettings(
@@ -71,37 +187,12 @@ export function Dashboard() {
       }),
     );
 
-  const setSelectedMatch = (match: Match) =>
-    setSettings(
-      produce((settings) => {
-        settings.matchId = match.uid;
-        settings.countdown = match.date;
-
-        if (match.date && match.date < Date.now()) {
-          settings.showCountdown = false;
-        }
-      }),
-    );
-
   const setActivePlayer = (player: "player1" | "player2") =>
     setSettings(
       produce((settings) => {
         settings.activePlayer = player;
       }),
     );
-
-  // Match ID dropdown
-  const [matchIsOpen, setMatchOpen] = useState(false);
-  const matchDropdownRef = useRef<HTMLDivElement>(null);
-
-  const { beatmaps } = useMappoolQuery();
-  const mappoolOptions = useMemo(
-    () =>
-      Object.values(beatmaps)
-        .flat()
-        .map((map) => `${map.modBracket}${map.modBracketIndex}`),
-    [beatmaps],
-  );
 
   // Bans & Picks dropdown
   const [bansSelection, setBansSelection] = useState("Select");
@@ -135,9 +226,12 @@ export function Dashboard() {
           selection[pickOrBan] = selection[pickOrBan].filter((m) => m !== map);
         }
 
-        settings.lastPickedBy = map.includes("TB")
-          ? null
-          : settings.activePlayer;
+        // bans must not mark the current map as picked by anyone
+        if (pickOrBan === "picks") {
+          settings.lastPickedBy = map.includes("TB")
+            ? null
+            : settings.activePlayer;
+        }
         settings.activePlayer =
           settings.activePlayer === "player1" ? "player2" : "player1";
       }),
@@ -192,7 +286,7 @@ export function Dashboard() {
       }),
     );
 
-  const setGraphicsStyle = (value: "NDC 2026" | "NDC 2025") =>
+  const setGraphicsStyle = (value: "EDC 2026" | "NDC 2026" | "NDC 2025") =>
     setSettings(
       produce((settings) => {
         settings.graphicsStyle = value;
@@ -209,12 +303,6 @@ export function Dashboard() {
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        matchDropdownRef.current &&
-        !matchDropdownRef.current.contains(e.target as Node)
-      )
-        setMatchOpen(false);
-
       if (
         bansDropdownRef.current &&
         !bansDropdownRef.current.contains(e.target as Node)
@@ -297,49 +385,7 @@ export function Dashboard() {
   return (
     <div id="main">
       <div id="title">tourney!dash</div>
-      {/* Match Select */}
-      <div id="match-select">
-        <div id="match-select-id" ref={matchDropdownRef}>
-          <div id="match-select-id-text">Select a match:</div>
-          <div
-            id="match-select-id-input"
-            className={matchIsOpen ? "open" : ""}
-            onClick={() => setMatchOpen(!matchIsOpen)}
-          >
-            {selectedMatch}
-          </div>
-          <div
-            className={`match-select-dropdown-options ${matchIsOpen ? "show" : ""}`}
-          >
-            {matches?.map((match) => (
-              <div
-                key={match.uid}
-                onClick={() => {
-                  setSelectedMatch(match);
-                  setMatchOpen(false);
-                }}
-              >
-                {`${match.uid} ${match.player1.name} - ${match.player2.name}`}
-              </div>
-            ))}
-          </div>
-        </div>
-        {/* <div className="checkbox-input">
-          <label
-            htmlFor="match-select-auto-checkbox"
-            className="checkbox-label"
-          >
-            Auto-select match from lobby name
-          </label>
-          <input
-            type="checkbox"
-            id="match-select-auto-checkbox"
-            name="autoselect"
-            checked={autoselect}
-            onChange={(e) => setAutoselect(e.target.checked)}
-          ></input>
-        </div> */}
-      </div>
+      {matchSelect}
       <div className="divider"></div>
       {/* Scene Switcher */}
       <div id="scene-switcher">
@@ -512,33 +558,35 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="tournament-data-row">
-          <div className="tournament-data-label">Tournament ID</div>
-          <div
-            ref={tournamentIdRef}
-            className={`tournament-data-select ${tournamentIdOpen ? "open" : ""}`}
-            onClick={() => setTournamentIdOpen((open) => !open)}
-          >
-            <span>{settings.tournamentId}</span>
+        {showTournamentId && (
+          <div className="tournament-data-row">
+            <div className="tournament-data-label">Tournament ID</div>
             <div
-              className={`tournament-data-options ${tournamentIdOpen ? "show" : ""}`}
+              ref={tournamentIdRef}
+              className={`tournament-data-select ${tournamentIdOpen ? "open" : ""}`}
+              onClick={() => setTournamentIdOpen((open) => !open)}
             >
-              {tournamentOptions.map((id) => (
-                <div
-                  key={id}
-                  className={settings.tournamentId === id ? "active" : ""}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTournamentId(id);
-                    setTournamentIdOpen(false);
-                  }}
-                >
-                  {id}
-                </div>
-              ))}
+              <span>{settings.tournamentId}</span>
+              <div
+                className={`tournament-data-options ${tournamentIdOpen ? "show" : ""}`}
+              >
+                {tournamentOptions.map((id) => (
+                  <div
+                    key={id}
+                    className={settings.tournamentId === id ? "active" : ""}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTournamentId(id);
+                      setTournamentIdOpen(false);
+                    }}
+                  >
+                    {id}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -81,8 +81,14 @@ export function DashboardSettingsProvider({
     },
     activePlayer: "player1",
     showCountdown: true,
-    graphicsStyle: "NDC 2026",
-    tournamentId: "36"
+    graphicsStyle: "EDC 2026",
+    tournamentId: "36",
+    edc: {
+      matchId: null,
+      roundId: null,
+      redEntrantId: null,
+      blueEntrantId: null,
+    },
   });
 
   const setSettings = useCallback(
