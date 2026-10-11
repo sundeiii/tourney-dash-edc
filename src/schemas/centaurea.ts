@@ -9,17 +9,14 @@ const userSchema = z.object({
 
 export const usersSchema = z.array(userSchema);
 
-export const profileSchema = z.object({
-  stats: z.array(
-    z.object({
-      ruleset: z.string(),
-      global_rank: z.number().nullish(),
-      country_rank: z.number().nullish(),
-      pp: z.number().nullish(),
-      accuracy: z.number().nullish(),
-    }),
-  ),
-});
+// readable by the public only when the event's qualifier_results_visibility is "full"
+export const qualifierScoresSchema = z.array(
+  z.object({
+    entrant_id: z.string(),
+    slot_id: z.string(),
+    score: z.number(),
+  }),
+);
 
 export type CentaureaUser = z.infer<typeof userSchema>;
 

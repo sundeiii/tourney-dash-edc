@@ -7,8 +7,9 @@ export function ScoreBars() {
   const p2Score = player2.score;
 
   const maxScore = p1Score + p2Score;
-  // each half stops short of the centred logo; must match .bars column-gap in style.css
-  const maxBarWidth = (960 - 384) / 2;
+  // each half stops short of the centred logo; must match #scoring width and
+  // .bars column-gap in style.css
+  const maxBarWidth = (1320 - 384) / 2;
 
   const redBarWidth =
     (Math.min(p1Score, maxScore) / maxScore) * maxBarWidth;

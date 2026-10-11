@@ -1,10 +1,10 @@
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import type { output, ZodType } from "zod";
 import {
   bracketSchema,
   eventViewSchema,
-  profileSchema,
+  qualifierScoresSchema,
   releasedPoolsSchema,
   usersSchema,
 } from "~/schemas/centaurea";
@@ -49,6 +49,7 @@ export type EdcEntrant = {
 export type EdcRound = {
   id: string;
   name: string;
+  stageId: string;
   stageName: string;
   // winners | losers | grand_finals
   side: string;
@@ -59,12 +60,7 @@ export type EdcRound = {
   mappoolId: string | null;
 };
 
-export type EdcMemberStats = {
-  globalRank: number | null;
-  countryRank: number | null;
-  pp: number | null;
-  accuracy: number | null;
-};
+export type EdcQualifierResult = { score: number; placement: number };
 
 export type EdcMatch = {
   id: string;
@@ -223,6 +219,7 @@ export function useEdcBracket() {
         const edcRound: EdcRound = {
           id: round.id,
           name: round.name,
+          stageId: stage.id,
           stageName: stage.name,
           side: round.bracket_side,
           qualifier,
@@ -278,40 +275,7 @@ export function useEdcCurrentMatch() {
   };
 }
 
-/** osu! standard stats per Centaurea user id; missing until each profile loads */
-export function useEdcMemberStats(userIds: string[]) {
-  const results = useQueries({
-    queries: userIds.map((id) => ({
-      queryKey: ["centaurea", "profile", id],
-      queryFn: () => fetchCentaurea(`accounts/${id}/profile`, profileSchema),
-    })),
-  });
-
-  const stats = new Map<string, EdcMemberStats>();
-  results.forEach((result, i) => {
-    if (result.error) {
-      console.error(result.error);
-    }
-
-    const s =
-      result.data?.stats.find((s) => s.ruleset === "standard") ??
-      result.data?.stats[0];
-    if (s) {
-      stats.set(userIds[i]!, {
-        globalRank: s.global_rank ?? null,
-        countryRank: s.country_rank ?? null,
-        pp: s.pp ?? null,
-        accuracy: s.accuracy ?? null,
-      });
-    }
-  });
-
-  return stats;
-}
-
-export function useEdcMappool() {
-  const { round } = useEdcCurrentMatch();
-
+function usePublicPools() {
   const query = useQuery({
     queryKey: ["centaurea", "pools", EDC_EVENT_ID],
     queryFn: () =>
@@ -325,11 +289,82 @@ export function useEdcMappool() {
     console.error(query.error);
   }
 
-  // several rounds can share one pool, so match on the pool before the round
-  const pool = round
-    ? (query.data?.find((p) => p.mappool_id === round.mappoolId) ??
-      query.data?.find((p) => p.round_id === round.id))
+  return query.data;
+}
+
+// several rounds can share one pool, so match on the pool before the round
+function poolForRound(
+  pools: ReturnType<typeof usePublicPools>,
+  round: EdcRound | undefined,
+) {
+  return round
+    ? (pools?.find((p) => p.mappool_id === round.mappoolId) ??
+        pools?.find((p) => p.round_id === round.id))
     : undefined;
+}
+
+/** each entrant's best score and placement on every qualifier map */
+export function useEdcQualifierStats() {
+  const { rounds } = useEdcBracket();
+  const qualifierRound = rounds.find((r) => r.qualifier);
+  const pool = poolForRound(usePublicPools(), qualifierRound);
+
+  const query = useQuery({
+    enabled: !!qualifierRound,
+    // a 403 means the results aren't public; asking again won't change that
+    retry: false,
+    queryKey: ["centaurea", "qualifier-scores", qualifierRound?.stageId],
+    queryFn: () =>
+      fetchCentaurea(
+        `stages/${qualifierRound!.stageId}/qualifier-scores`,
+        qualifierScoresSchema,
+      ),
+  });
+
+  return useMemo(() => {
+    const slots = (pool?.slots ?? [])
+      .toSorted((a, b) => a.position - b.position)
+      .map((slot) => ({
+        id: slot.id,
+        code: slot.code.toUpperCase(),
+        mod: slot.game_mod.toUpperCase(),
+      }));
+
+    const bestScores = new Map<string, Map<string, number>>();
+    for (const row of query.data ?? []) {
+      const scores = bestScores.get(row.slot_id) ?? new Map<string, number>();
+      bestScores.set(row.slot_id, scores);
+      scores.set(row.entrant_id, Math.max(scores.get(row.entrant_id) ?? 0, row.score));
+    }
+
+    const results = new Map<string, Map<string, EdcQualifierResult>>();
+    for (const [slotId, scores] of bestScores) {
+      [...scores]
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([entrantId, score], i) => {
+          const entrant = results.get(entrantId) ?? new Map();
+          results.set(entrantId, entrant);
+          entrant.set(slotId, { score, placement: i + 1 });
+        });
+    }
+
+    const status = !qualifierRound
+      ? "none"
+      : query.error
+        ? "private"
+        : !query.data
+          ? "loading"
+          : slots.length === 0
+            ? "no-pool"
+            : "ready";
+
+    return { status, slots, results, entrantCount: results.size } as const;
+  }, [pool, query.data, query.error, qualifierRound]);
+}
+
+export function useEdcMappool() {
+  const { round } = useEdcCurrentMatch();
+  const pool = poolForRound(usePublicPools(), round);
 
   const groups = useMemo(() => {
     const groups: { mod: string; maps: EdcBeatmap[] }[] = [];

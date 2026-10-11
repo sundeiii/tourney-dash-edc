@@ -343,11 +343,12 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
 
 /* Scoring Section */
 
+/* spans from just past each team's seed line to the logo */
 #scoring {
   position: fixed;
   top: 89px;
-  left: 480px;
-  width: 960px;
+  left: 300px;
+  width: 1320px;
   transition:
     width 0.5s cubic-bezier(0.77, 0, 0.175, 1),
     height 0.5s cubic-bezier(0.77, 0, 0.175, 1);
@@ -1826,48 +1827,39 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   gap: 8px;
 }
 
-/* PLAYER INFO */
+/* PLAYER INFO — qualifier results, red vs blue per qualifier map */
 
-#pi-teams {
+.pi-teams {
   position: absolute;
-  top: 200px;
-  left: 80px;
-  width: 1760px;
+  top: 240px;
+  left: 120px;
+  width: 1680px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
 }
 
 .pi-team {
   --team-color: #dc1f2b;
   width: 780px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 24px;
 }
 
 .pi-team.blue {
   --team-color: #1f55dc;
-}
-
-.pi-team-header {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.pi-team.blue .pi-team-header {
   flex-direction: row-reverse;
   text-align: right;
 }
 
-.pi-team-avatar img {
-  display: block;
-  width: 140px;
-  height: 140px;
+.pi-team-avatar {
+  box-sizing: border-box;
+  flex: 0 0 130px;
+  width: 130px;
+  height: 130px;
   object-fit: cover;
-  outline: 7px solid var(--team-color);
-  outline-offset: -7px;
+  border: 8px solid var(--team-color);
+  outline: 4px solid #FFFFFF;
 }
 
 .pi-team-text {
@@ -1875,112 +1867,151 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+}
+
+.pi-team-name,
+.pi-team-members {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pi-team-name {
-  font-size: 64px;
-  font-family: Exo2Black, Helvetica, sans-serif;
-  color: #FFFFFF;
-  text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pi-team-seed {
-  font-size: 32px;
+  font-size: 52px;
   font-family: Exo2Black, Helvetica, sans-serif;
   color: #FFFFFF;
 }
 
-.pi-team-seed .player-info-label {
-  font-size: 32px;
-}
-
-.pi-member {
-  box-sizing: border-box;
-  width: 100%;
-  display: flex;
-  gap: 28px;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.25);
-  border-left: 8px solid var(--team-color);
-}
-
-.pi-team.blue .pi-member {
-  flex-direction: row-reverse;
-  text-align: right;
-  border-left: none;
-  border-right: 8px solid var(--team-color);
-}
-
-.pi-member-avatar img {
-  display: block;
-  width: 200px;
-  height: 200px;
-  object-fit: cover;
-}
-
-.pi-member-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.pi-member-name {
-  font-size: 56px;
-  font-family: Exo2Black, Helvetica, sans-serif;
-  color: #FFFFFF;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pi-stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px 24px;
-}
-
-.pi-stat-label {
-  font-size: 20px;
+.pi-team-members {
+  font-size: 26px;
   font-family: Exo2Bold, Helvetica, sans-serif;
   color: var(--label);
-  text-transform: uppercase;
 }
 
-.pi-stat-value {
-  font-size: 36px;
+.pi-team-stats {
+  display: flex;
+  gap: 24px;
+  margin-top: 4px;
+  font-size: 24px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--label);
+}
+
+.pi-team.blue .pi-team-stats {
+  justify-content: flex-end;
+}
+
+.pi-team-stats b {
   font-family: Exo2Black, Helvetica, sans-serif;
+  font-weight: normal;
   color: #FFFFFF;
 }
 
-#pi-vs {
-  align-self: center;
-  font-size: 96px;
-  font-family: Exo2Black, Helvetica, sans-serif;
-  color: #FFFFFF;
-}
-
-#pi-stage {
+.pi-table {
+  --row-height: min(56px, calc(620px / var(--rows)));
   position: absolute;
-  top: 970px;
+  top: 420px;
+  left: 210px;
+  width: 1500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pi-row {
+  height: var(--row-height);
+  display: grid;
+  grid-template-columns: 1fr 140px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.pi-side {
+  --team-color: #dc1f2b;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* blue mirrors red so both bars grow outward from the map code */
+.pi-side.blue {
+  --team-color: #1f55dc;
+  flex-direction: row-reverse;
+}
+
+.pi-score {
+  flex: 0 0 170px;
+  text-align: right;
+  font-size: 26px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+}
+
+.pi-side.blue .pi-score {
+  text-align: left;
+}
+
+.pi-placement {
+  flex: 0 0 70px;
+  padding: 2px 0 4px;
+  text-align: center;
+  font-size: 26px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+}
+
+.pi-side.top .pi-placement {
+  background: #FFFFFF;
+  color: var(--edc-blue);
+}
+
+.pi-bar-track {
+  flex: 1;
+  height: 22px;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.pi-side.blue .pi-bar-track {
+  justify-content: flex-start;
+}
+
+.pi-bar {
+  height: 100%;
+  background: var(--team-color);
+  transition: width 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.pi-code {
+  height: calc(var(--row-height) - 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.pi-code.nm { color: #6e97ff; }
+.pi-code.hd { color: #fff36e; }
+.pi-code.hr { color: #ff6e6e; }
+.pi-code.dt { color: #b46eff; }
+.pi-code.fm { color: #6effe0; }
+.pi-code.tb { color: var(--edc-blue-light); }
+
+.pi-empty {
+  position: absolute;
+  top: 600px;
   left: 0;
   width: 1920px;
   text-align: center;
   font-size: 40px;
   font-family: Exo2Black, Helvetica, sans-serif;
-  color: #FFFFFF;
-  text-transform: uppercase;
-}
-
-.pi-stage-label {
-  font-family: Exo2Bold, Helvetica, sans-serif;
   color: var(--label);
-  text-transform: none;
+  text-transform: uppercase;
 }
 
 /* BRACKETS — boxes and lines are positioned from Bracket.tsx's layout math */
