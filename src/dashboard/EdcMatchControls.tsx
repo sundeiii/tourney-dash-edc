@@ -131,7 +131,7 @@ export function EdcMatchControls() {
   );
 
   const roundOptions = useMemo(
-    () => rounds.map((r) => ({ value: r.id, label: `${r.name} (${r.label})` })),
+    () => rounds.map((r) => ({ value: r.id, label: r.label ? `${r.name} (${r.label})` : r.name })),
     [rounds],
   );
 

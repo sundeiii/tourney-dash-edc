@@ -10,9 +10,15 @@ import {
   dashboardMessageSchema,
   type DashboardMessage,
 } from "./schemas/settings";
+import { CENTAUREA_API, CENTAUREA_AUTHED_PATH } from "./centaureaAuth";
 import { isProduction } from "./util";
 
-const CENTAUREA_API = "https://api.centaurea.ee/api/v1";
+// the host's "centaurea_session" cookie, from .env, so the overlay can read
+// qualifier scores and mappools before they're public. Other streamers set
+// a relay instead (src/relay.ts), which asks with the host's cookie for them
+const CENTAUREA_SESSION = Bun.env.CENTAUREA_SESSION?.trim();
+const CENTAUREA_RELAY_URL = Bun.env.CENTAUREA_RELAY_URL?.trim().replace(/\/$/, "");
+const CENTAUREA_RELAY_TOKEN = Bun.env.CENTAUREA_RELAY_TOKEN?.trim();
 
 // osu-web serves match and room pages as JSON to its own live view, no API
 // key needed
@@ -241,9 +247,23 @@ async function run() {
           return new Response("Bad path", { status: 400 });
         }
 
-        const upstream = await fetch(`${CENTAUREA_API}/${path}${url.search}`, {
-          headers: { accept: "application/json" },
-        });
+        const authed = CENTAUREA_AUTHED_PATH.test(path);
+        const headers: Record<string, string> = { accept: "application/json" };
+        let target = `${CENTAUREA_API}/${path}${url.search}`;
+        if (authed && CENTAUREA_SESSION) {
+          headers.cookie = `centaurea_session=${CENTAUREA_SESSION}`;
+        } else if (authed && CENTAUREA_RELAY_URL && CENTAUREA_RELAY_TOKEN) {
+          headers.authorization = `Bearer ${CENTAUREA_RELAY_TOKEN}`;
+          target = `${CENTAUREA_RELAY_URL}/${path}`;
+        }
+
+        let upstream: Response;
+        try {
+          upstream = await fetch(target, { headers });
+        } catch (e) {
+          console.error(`couldn't reach ${new URL(target).host}:`, e);
+          return new Response("Upstream unreachable", { status: 502 });
+        }
 
         return new Response(upstream.body, {
           status: upstream.status,

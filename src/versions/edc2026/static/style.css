@@ -1028,7 +1028,7 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   height: 720px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .mappool-map-top {
@@ -1057,6 +1057,12 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   background-image: var(--bg);
   background-size: cover;
   background-position: center center;
+}
+
+.mappool-row {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
 }
 
 .mappool-group {

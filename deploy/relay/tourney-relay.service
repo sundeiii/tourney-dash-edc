@@ -1,0 +1,24 @@
+# systemd unit for the Centaurea relay (src/relay.ts); see deploy/relay/README.md
+[Unit]
+Description=tourney-dash Centaurea relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=tourney-relay
+Group=tourney-relay
+# Bun reads CENTAUREA_SESSION and RELAY_TOKEN from the .env in here
+WorkingDirectory=/opt/tourney-relay
+ExecStart=/usr/local/bin/bun relay.ts
+Restart=always
+RestartSec=5
+
+# it only needs to read its own folder and talk to the network
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/opt/tourney-relay
+
+[Install]
+WantedBy=multi-user.target

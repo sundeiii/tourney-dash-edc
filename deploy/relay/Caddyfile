@@ -1,0 +1,5 @@
+# Caddy gets and renews the HTTPS certificate for this name by itself;
+# replace it with the (sub)domain you pointed at the VPS
+relay.example.com {
+	reverse_proxy 127.0.0.1:7280
+}

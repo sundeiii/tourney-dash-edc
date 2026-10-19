@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "bun --hot src/main.ts",
     "start": "NODE_ENV=production bun src/main.ts",
+    "relay": "bun src/relay.ts",
     "build": "bun run build.ts",
     "prepare-pack:win": "vpk download github --repoUrl https://github.com/NDC-Tourney/tourney-dash -c win",
     "prepare-pack:linux": "vpk download github --repoUrl https://github.com/NDC-Tourney/tourney-dash -c linux",

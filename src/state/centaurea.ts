@@ -236,7 +236,15 @@ export function useEdcBracket() {
           qualifier,
           label: qualifier
             ? "Qualifiers"
-            : (SIDE_LABELS[round.bracket_side] ?? round.bracket_side),
+            : // nobody has dropped to losers before the first round is played
+              round.bracket_side === "winners" &&
+                !stageRounds.some(
+                  (r) =>
+                    r.round.bracket_side === "winners" &&
+                    r.round.position < round.position,
+                )
+              ? ""
+              : (SIDE_LABELS[round.bracket_side] ?? round.bracket_side),
           bestOf: round.best_of,
           bansPerTeam: round.bans,
           mappoolId: round.mappool_id ?? null,
@@ -322,17 +330,71 @@ function usePools() {
 
   const local = useLocalPools();
 
+  // the bracket's pools that aren't released yet, read as staff with the
+  // server's session cookie
+  const { rounds } = useEdcBracket();
+  const unreleasedIds = useMemo(() => {
+    if (!query.data) {
+      return [];
+    }
+    const released = new Set(query.data.map((p) => p.mappool_id));
+    return [
+      ...new Set(
+        rounds.flatMap((r) =>
+          r.mappoolId && !released.has(r.mappoolId) ? [r.mappoolId] : [],
+        ),
+      ),
+    ];
+  }, [query.data, rounds]);
+
+  const unreleased = useQueries({
+    queries: unreleasedIds.map((id) => ({
+      queryKey: ["centaurea", "pool", id],
+      // no cookie, or not staff; asking again won't change that
+      retry: false,
+      queryFn: () =>
+        fetchCentaurea(`mappools/${id}/full`, localPoolsSchema.element),
+    })),
+    combine: poolDataOf,
+  });
+
   return useMemo(() => {
     const pools = [...(query.data ?? [])];
-    for (const { slots } of local ?? []) {
-      const mappoolId = slots[0]!.mappool_id;
-      if (!pools.some((p) => p.mappool_id === mappoolId)) {
-        pools.push({ round_id: "", round_name: "", mappool_id: mappoolId, slots });
+    // Centaurea's copy first, so a file in pools/ only fills in the slots
+    // staff haven't picked a map for yet, or the whole pool without a cookie
+    for (const pool of [...unreleased, ...(local ?? [])]) {
+      const slots = pool?.slots;
+      if (!slots?.length) {
+        continue;
       }
+      const mappoolId = slots[0]!.mappool_id;
+      const i = pools.findIndex((p) => p.mappool_id === mappoolId);
+      if (i === -1) {
+        pools.push({
+          round_id: "",
+          round_name: "",
+          mappool_id: mappoolId,
+          slots,
+        });
+        continue;
+      }
+      pools[i] = {
+        ...pools[i]!,
+        slots: pools[i]!.slots.map((slot) =>
+          slot.beatmap_id || slot.snapshot.title
+            ? slot
+            : (slots.find((s) => s.code === slot.code) ?? slot),
+        ),
+      };
     }
     return pools;
-  }, [query.data, local]);
+  }, [query.data, local, unreleased]);
 }
+
+// module-level so useQueries can keep its combined result between renders
+const poolDataOf = (
+  results: { data: output<typeof localPoolsSchema.element> | undefined }[],
+) => results.map((r) => r.data);
 
 // several rounds can share one pool, so match on the pool before the round
 function poolForRound(

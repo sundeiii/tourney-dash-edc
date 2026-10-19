@@ -235,6 +235,11 @@ function DashboardView({
           settings.showCountdown = false;
         }
 
+        // a results reveal starts over from last place each time it comes on
+        if (screen === "qualteam" && settings.activeScreen !== "qualteam") {
+          settings.edc.qualifierEntrantId = null;
+        }
+
         settings.activeScreen = screen;
         settings.previousScreen = settings.activeScreen;
       }),
