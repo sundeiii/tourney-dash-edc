@@ -1,5 +1,9 @@
 import { timingSafeEqual } from "node:crypto";
-import { CENTAUREA_API, CENTAUREA_AUTHED_PATH } from "./centaureaAuth";
+import {
+  CENTAUREA_API,
+  CENTAUREA_AUTHED_PATH,
+  CENTAUREA_OPEN_PATH,
+} from "./centaureaAuth";
 
 /**
  * Hands the host's private Centaurea data (qualifier scores, unreleased
@@ -8,7 +12,8 @@ import { CENTAUREA_API, CENTAUREA_AUTHED_PATH } from "./centaureaAuth";
  * doesn't expose anyone's dashboard.
  *
  *   CENTAUREA_SESSION  the host's "centaurea_session" cookie
- *   RELAY_TOKEN        what streamers put in CENTAUREA_RELAY_TOKEN
+ *   RELAY_TOKEN        needed for the staff list and profiles (the reminder
+ *                      bot); qualifier scores and pools are open to anyone
  *   RELAY_PORT         defaults to 7280
  *   RELAY_HOST         defaults to 127.0.0.1, for running behind an HTTPS
  *                      proxy like Caddy; 0.0.0.0 serves plain HTTP to anyone
@@ -48,13 +53,12 @@ const server = Bun.serve({
     if (req.method !== "GET") {
       return new Response("Method not allowed", { status: 405 });
     }
-    if (!authorized(req)) {
-      return new Response("Bad token", { status: 401 });
-    }
-
     const path = new URL(req.url).pathname.replace(/^\//, "");
     if (!CENTAUREA_AUTHED_PATH.test(path)) {
       return new Response("Not relayed", { status: 404 });
+    }
+    if (!CENTAUREA_OPEN_PATH.test(path) && !authorized(req)) {
+      return new Response("Bad token", { status: 401 });
     }
 
     const cached = cache.get(path);

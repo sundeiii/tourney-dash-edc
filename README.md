@@ -45,12 +45,17 @@ if the results go back to showing as private or a new pool doesn't appear.
 
 ## Relay for other streamers
 
-Streamers without a Centaurea staff login can get the private qualifier
-scores and pools from the host through a relay, instead of each needing a
-cookie.
+Streamers without a Centaurea staff login get the private qualifier scores
+and unreleased pools from the host's relay at `https://relay.sundei.eu`. The
+overlay uses it automatically when there's no `CENTAUREA_SESSION`, so
+streamers need no `.env` and no setup.
+
+That means anyone who finds the relay can read the qualifier scores and
+unreleased pools early. The staff list and player profiles (used by the
+Discord reminder bot) still need the relay's token.
 
 The host runs the relay next to their own `.env` with `CENTAUREA_SESSION` in
-it, plus a long random token:
+it, plus a long random token for the bot:
 
 ```
 RELAY_TOKEN=make-this-long-and-random
@@ -61,17 +66,10 @@ RELAY_PORT=7280
 bun run relay
 ```
 
-The relay only answers the qualifier scores and mappool paths, and only with
-the token. It's separate from the overlay, so putting it online doesn't expose
-your dashboard. Put it behind HTTPS, for example with a tunnel, so the token
-isn't sent in the clear. See [deploy/relay](deploy/relay/README.md) for running it on a
-VPS behind Caddy.
+The relay only answers the qualifier scores, mappool, match staff and profile
+paths. It's separate from the overlay, so putting it online doesn't expose
+your dashboard. Put it behind HTTPS, for example with a tunnel. See
+[deploy/relay](deploy/relay/README.md) for running it on a VPS.
 
-Each streamer puts this in their `.env`, and no `CENTAUREA_SESSION`:
-
-```
-CENTAUREA_RELAY_URL=https://your-relay.example
-CENTAUREA_RELAY_TOKEN=make-this-long-and-random
-```
-
-To cut someone off, change `RELAY_TOKEN` and give the new one to everyone else.
+To point an overlay at a different relay, set `CENTAUREA_RELAY_URL` in its
+`.env`.

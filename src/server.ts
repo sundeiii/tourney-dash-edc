@@ -14,10 +14,13 @@ import { CENTAUREA_API, CENTAUREA_AUTHED_PATH } from "./centaureaAuth";
 import { isProduction } from "./util";
 
 // the host's "centaurea_session" cookie, from .env, so the overlay can read
-// qualifier scores and mappools before they're public. Other streamers set
-// a relay instead (src/relay.ts), which asks with the host's cookie for them
+// qualifier scores and mappools before they're public. Without one the
+// overlay asks the host's relay (src/relay.ts), which gives those to anyone,
+// so streamers need no setup; the relay token is only for the reminder bot
 const CENTAUREA_SESSION = Bun.env.CENTAUREA_SESSION?.trim();
-const CENTAUREA_RELAY_URL = Bun.env.CENTAUREA_RELAY_URL?.trim().replace(/\/$/, "");
+const CENTAUREA_RELAY_URL = (
+  Bun.env.CENTAUREA_RELAY_URL?.trim() || "https://relay.sundei.eu"
+).replace(/\/$/, "");
 const CENTAUREA_RELAY_TOKEN = Bun.env.CENTAUREA_RELAY_TOKEN?.trim();
 
 // osu-web serves match and room pages as JSON to its own live view, no API
@@ -252,8 +255,10 @@ async function run() {
         let target = `${CENTAUREA_API}/${path}${url.search}`;
         if (authed && CENTAUREA_SESSION) {
           headers.cookie = `centaurea_session=${CENTAUREA_SESSION}`;
-        } else if (authed && CENTAUREA_RELAY_URL && CENTAUREA_RELAY_TOKEN) {
-          headers.authorization = `Bearer ${CENTAUREA_RELAY_TOKEN}`;
+        } else if (authed) {
+          if (CENTAUREA_RELAY_TOKEN) {
+            headers.authorization = `Bearer ${CENTAUREA_RELAY_TOKEN}`;
+          }
           target = `${CENTAUREA_RELAY_URL}/${path}`;
         }
 
