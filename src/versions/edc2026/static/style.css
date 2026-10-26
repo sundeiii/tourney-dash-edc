@@ -1692,6 +1692,23 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   border: 2px dashed rgba(255, 255, 255, 0.5);
 }
 
+.match-extra {
+  justify-content: center;
+}
+
+.match-extra-title {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 20px;
+  font-size: 28px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #ffffff;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .match-time {
   font-size: 14px;
   font-family: Exo2Bold, Helvetica, sans-serif;
@@ -2538,6 +2555,21 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   font-family: Exo2Black, Helvetica, sans-serif;
   color: var(--label);
   text-transform: uppercase;
+}
+
+.up-next-row.up-next-extra {
+  grid-template-columns: 1fr 160px;
+}
+
+.up-next-extra-title {
+  min-width: 0;
+  text-align: center;
+  font-size: 26px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .up-next-time {

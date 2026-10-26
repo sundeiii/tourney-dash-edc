@@ -670,6 +670,32 @@ export function useEdcQualifierTeam() {
   } as const;
 }
 
+export type EdcScheduleExtra = { id: string; title: string; date: number };
+
+export type EdcScheduleItem =
+  | { kind: "match"; date: number; match: EdcMatch & { date: number } }
+  | { kind: "extra"; date: number; extra: EdcScheduleExtra };
+
+/** the upcoming matches, plus the stream events typed in on the dashboard */
+export function useEdcUpcoming(): EdcScheduleItem[] {
+  const { upcoming } = useEdcSchedule();
+  const [{ edc }] = useSettings();
+  const now = Date.now();
+
+  return [
+    ...upcoming.map((match) => ({
+      kind: "match" as const,
+      date: match.date,
+      match,
+    })),
+    ...edc.scheduleExtras
+      .filter((extra) => extra.date >= now)
+      .map((extra) => ({ kind: "extra" as const, date: extra.date, extra })),
+  ]
+    .toSorted((a, b) => a.date - b.date)
+    .slice(0, SCHEDULE_SIZE);
+}
+
 export function useEdcLinks() {
   return useEventView()?.links ?? [];
 }

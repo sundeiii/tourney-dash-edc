@@ -91,6 +91,7 @@ export function DashboardSettingsProvider({
       redEntrantId: null,
       blueEntrantId: null,
       qualifierEntrantId: null,
+      scheduleExtras: [],
     },
   });
 

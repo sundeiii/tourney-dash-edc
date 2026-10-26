@@ -18,6 +18,11 @@ export const edcSettingsSchema = z.object({
   blueEntrantId: z.string().nullable(),
   // the team the qualifier Team Results screen shows, or "summary" for all
   qualifierEntrantId: z.string().nullable().default(null),
+  // stream events Centaurea's schedule doesn't know about, like a mappool
+  // showcase, shown among the upcoming matches until they start
+  scheduleExtras: z
+    .array(z.object({ id: z.string(), title: z.string(), date: z.number() }))
+    .default([]),
 });
 
 export type EdcSettings = z.infer<typeof edcSettingsSchema>;

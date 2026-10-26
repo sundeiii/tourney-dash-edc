@@ -1,3 +1,5 @@
+import clsx from "clsx";
+import dayjs from "dayjs";
 import { produce } from "immer";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EDC_EVENTS } from "~/edcEvents";
@@ -166,6 +168,7 @@ export function EdcMatchControls() {
                 redEntrantId: null,
                 blueEntrantId: null,
                 qualifierEntrantId: null,
+                scheduleExtras: settings.edc.scheduleExtras,
               };
             }),
           )
@@ -265,6 +268,105 @@ export function EdcQualifierControls() {
           onClick={() => up && show(up.value)}
         >
           {up?.label ?? "the end"} ▶
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Stream events Centaurea's schedule doesn't have, like a mappool showcase.
+ * Typed in the PC's own time like the countdown; the overlay shows them in
+ * Estonian time with the matches. Adding one points the countdown at it.
+ */
+export function EdcScheduleExtras() {
+  const [settings, setSettings] = useSettings();
+  const [title, setTitle] = useState("Mappool showcase");
+  const [when, setWhen] = useState("");
+
+  const extras = settings.edc.scheduleExtras.toSorted((a, b) => a.date - b.date);
+  const date = when ? dayjs(when).valueOf() : NaN;
+  const canAdd = title.trim() !== "" && Number.isFinite(date);
+
+  const add = () => {
+    if (!canAdd) {
+      return;
+    }
+    setSettings(
+      produce((settings) => {
+        settings.edc.scheduleExtras.push({
+          id: crypto.randomUUID(),
+          title: title.trim(),
+          date,
+        });
+        if (date > Date.now()) {
+          settings.countdown = date;
+        }
+      }),
+    );
+    setWhen("");
+  };
+
+  const countTo = (date: number) =>
+    setSettings(
+      produce((settings) => {
+        settings.countdown = date;
+        settings.showCountdown = true;
+      }),
+    );
+
+  const remove = (id: string) =>
+    setSettings(
+      produce((settings) => {
+        settings.edc.scheduleExtras = settings.edc.scheduleExtras.filter(
+          (extra) => extra.id !== id,
+        );
+      }),
+    );
+
+  return (
+    <div id="schedule-extras">
+      <div className="section-title">Schedule Extras</div>
+      {extras.map((extra) => (
+        <div className="schedule-extra" key={extra.id}>
+          <span className="schedule-extra-title">{extra.title}</span>
+          <span className="schedule-extra-date">
+            {dayjs(extra.date).format("ddd D MMM HH:mm")}
+            {extra.date < Date.now() && " (over)"}
+          </span>
+          {extra.date > Date.now() && (
+            <button
+              className={clsx(
+                "schedule-extra-remove",
+                settings.countdown === extra.date && "counting",
+              )}
+              title="Count down to this"
+              onClick={() => countTo(extra.date)}
+            >
+              ⏱
+            </button>
+          )}
+          <button className="schedule-extra-remove" onClick={() => remove(extra.id)}>
+            ✕
+          </button>
+        </div>
+      ))}
+      <div id="schedule-extra-form">
+        <input
+          className="schedule-extra-input"
+          value={title}
+          placeholder="Name"
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <input
+          className="schedule-extra-input"
+          type="datetime-local"
+          title="Your PC's time, like the countdown"
+          value={when}
+          onChange={(e) => setWhen(e.target.value)}
+        />
+        <button className="switcher-option" disabled={!canAdd} onClick={add}>
+          Add
         </button>
       </div>
     </div>

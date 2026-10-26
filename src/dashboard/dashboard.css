@@ -774,3 +774,69 @@ button:active {
   opacity: 0.4;
   cursor: default;
 }
+
+#schedule-extras {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.schedule-extra {
+  width: 424px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: #4c297f;
+  color: white;
+  font-family: "BenderRegular", sans-serif;
+  font-size: 20px;
+}
+
+.schedule-extra-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-extra-remove {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.schedule-extra-remove:hover,
+.schedule-extra-remove.counting {
+  opacity: 1;
+}
+
+#schedule-extra-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.schedule-extra-input {
+  height: 48px;
+  padding: 0 8px;
+  background: #4c2980;
+  border: none;
+  color: white;
+  font-size: 20px;
+  font-family: BenderBold, Helvetica, sans-serif;
+}
+
+.schedule-extra-input:focus {
+  outline: none;
+}
+
+.schedule-extra-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}

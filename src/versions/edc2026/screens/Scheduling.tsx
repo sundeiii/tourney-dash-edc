@@ -9,8 +9,10 @@ import { MainContent } from "../components/MainContent";
 import {
   useEdcCurrentMatch,
   useEdcSchedule,
+  useEdcUpcoming,
   type EdcEntrant,
   type EdcMatch,
+  type EdcScheduleExtra,
 } from "~/state/centaurea";
 import { useTosu } from "~/state/tosu";
 
@@ -36,6 +38,17 @@ function MatchSide({ side, color }: { side: Side; color: "red" | "blue" }) {
   );
 }
 
+function MatchTime({ date }: { date: number | null }) {
+  return (
+    <div className="match-time">
+      <div className="match-until">{dayjs(date).fromNow()}</div>
+      <div className="match-timestamp">
+        {dayjs(date).tz("Europe/Tallinn").format("dddd HH:mm")}
+      </div>
+    </div>
+  );
+}
+
 function MatchRow({ match, red, blue }: { match: EdcMatch; red: Side; blue: Side }) {
   return (
     <div className="match">
@@ -43,12 +56,21 @@ function MatchRow({ match, red, blue }: { match: EdcMatch; red: Side; blue: Side
         <MatchSide side={red} color="red" />
         <MatchSide side={blue} color="blue" />
       </div>
-      <div className="match-time">
-        <div className="match-until">{dayjs(match.date).fromNow()}</div>
-        <div className="match-timestamp">
-          {dayjs(match.date).tz("Europe/Tallinn").format("dddd HH:mm")}
-        </div>
+      <MatchTime date={match.date} />
+    </div>
+  );
+}
+
+// a stream event typed in on the dashboard, like a mappool showcase
+function ExtraRow({ extra }: { extra: EdcScheduleExtra }) {
+  return (
+    <div className="match">
+      <div className="match-info match-extra">
+        <FitText className="match-extra-title" min={0.6}>
+          {extra.title}
+        </FitText>
       </div>
+      <MatchTime date={extra.date} />
     </div>
   );
 }
@@ -65,7 +87,8 @@ export function SchedulingScreen({ from, to }: SchedulingScreenProps) {
   const slideDirection: 1 | -1 = 1;
 
   const { matchId, roundName } = useEdcCurrentMatch();
-  const { upcoming, recent } = useEdcSchedule();
+  const { recent } = useEdcSchedule();
+  const upcoming = useEdcUpcoming();
   const { tourney } = useTosu();
 
   const sides = (match: EdcMatch): { red: Side; blue: Side } => {
@@ -111,9 +134,17 @@ export function SchedulingScreen({ from, to }: SchedulingScreenProps) {
               <div id="schedule-upcoming">
                 <div id="schedule-upcoming-text">Upcoming Matches</div>
                 <div id="upcoming-matches">
-                  {upcoming.map((match) => (
-                    <MatchRow key={match.id} match={match} {...sides(match)} />
-                  ))}
+                  {upcoming.map((item) =>
+                    item.kind === "match" ? (
+                      <MatchRow
+                        key={item.match.id}
+                        match={item.match}
+                        {...sides(item.match)}
+                      />
+                    ) : (
+                      <ExtraRow key={item.extra.id} extra={item.extra} />
+                    ),
+                  )}
                 </div>
               </div>
               <div id="schedule-previous">

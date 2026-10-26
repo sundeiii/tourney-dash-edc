@@ -19,7 +19,11 @@ import {
 } from "~/state/huis";
 import { useTosu } from "~/state/tosu";
 import { motion } from "motion/react";
-import { EdcMatchControls, EdcQualifierControls } from "./EdcMatchControls";
+import {
+  EdcMatchControls,
+  EdcQualifierControls,
+  EdcScheduleExtras,
+} from "./EdcMatchControls";
 
 const SCENE_LABELS: Record<ScreenName, string> = {
   startingsoon: "Starting Soon",
@@ -92,6 +96,7 @@ function EdcDashboard() {
       mappoolOptions={mappoolOptions}
       matchSelect={<EdcMatchControls />}
       sceneControls={<EdcQualifierControls />}
+      scheduleControls={<EdcScheduleExtras />}
     />
   );
 }
@@ -204,6 +209,8 @@ type DashboardViewProps = {
   matchSelect: ReactNode;
   // controls for whichever scene is on, under the scene switcher
   sceneControls?: ReactNode;
+  // under the countdown, for events that aren't matches
+  scheduleControls?: ReactNode;
   showTournamentId?: boolean;
 };
 
@@ -211,6 +218,7 @@ function DashboardView({
   mappoolOptions,
   matchSelect,
   sceneControls,
+  scheduleControls,
   showTournamentId = false,
 }: DashboardViewProps) {
   const {
@@ -578,6 +586,13 @@ function DashboardView({
           </div>
         </div>
       </motion.div>
+
+      {scheduleControls && (
+        <>
+          <div className="divider"></div>
+          {scheduleControls}
+        </>
+      )}
 
       <div className="divider"></div>
       <div id="tournament-data">
