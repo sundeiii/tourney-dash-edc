@@ -840,3 +840,27 @@ button:active {
 .schedule-extra-input::-webkit-calendar-picker-indicator {
   filter: invert(1);
 }
+
+#pickban-extras {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 14px;
+}
+
+#pickban-undo {
+  height: 44px;
+  padding: 0 18px;
+  background: #4c297f;
+  border: none;
+  color: white;
+  font-family: "BenderRegular", sans-serif;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+#pickban-undo:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

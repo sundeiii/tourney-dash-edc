@@ -9,8 +9,9 @@ import {
   type ReactNode,
 } from "react";
 import type { Match } from "~/schemas/huis";
+import type { DashboardSettings } from "~/schemas/settings";
 import { screenNames, type ScreenName } from "~/schemas/screens";
-import { useEdcMappool } from "~/state/centaurea";
+import { useEdcCurrentMatch, useEdcMappool } from "~/state/centaurea";
 import { useSettings } from "~/state/dashboard";
 import {
   useMappoolQuery,
@@ -86,6 +87,7 @@ export function Dashboard() {
 
 function EdcDashboard() {
   const { groups } = useEdcMappool();
+  const { round } = useEdcCurrentMatch();
   const mappoolOptions = useMemo(
     () => groups.flatMap((g) => g.maps.map((m) => m.code)),
     [groups],
@@ -97,6 +99,7 @@ function EdcDashboard() {
       matchSelect={<EdcMatchControls />}
       sceneControls={<EdcQualifierControls />}
       scheduleControls={<EdcScheduleExtras />}
+      bansPerTeam={round?.bansPerTeam ?? 0}
     />
   );
 }
@@ -211,6 +214,8 @@ type DashboardViewProps = {
   sceneControls?: ReactNode;
   // under the countdown, for events that aren't matches
   scheduleControls?: ReactNode;
+  // bans each team gets; set, it offers picking and banning from match chat
+  bansPerTeam?: number;
   showTournamentId?: boolean;
 };
 
@@ -219,9 +224,11 @@ function DashboardView({
   matchSelect,
   sceneControls,
   scheduleControls,
+  bansPerTeam,
   showTournamentId = false,
 }: DashboardViewProps) {
   const {
+    player1: tosuPlayer1,
     tourney: { chat },
   } = useTosu();
   const [settings, setSettings] = useSettings();
@@ -260,6 +267,66 @@ function DashboardView({
       }),
     );
 
+  // the mappool before each ban or pick, newest last, so Undo can step back;
+  // only this dashboard's own, and gone on reload
+  const history = useRef<MappoolState[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const remember = (before: DashboardSettings) => {
+    history.current.push(mappoolStateOf(before));
+    setCanUndo(true);
+  };
+  const undo = () => {
+    const before = history.current.pop();
+    setCanUndo(history.current.length > 0);
+    if (before) {
+      setSettings(
+        produce((settings) => {
+          Object.assign(settings, before);
+        }),
+      );
+    }
+  };
+
+  // chat already there when this dashboard opened is never replayed
+  const seenChat = useRef<Set<string> | null>(null);
+  const tosuConnected = tosuPlayer1.name !== "loading...";
+  useEffect(() => {
+    if (!tosuConnected) {
+      return;
+    }
+    if (!seenChat.current) {
+      seenChat.current = new Set(chat.map(chatKey));
+      return;
+    }
+
+    const fresh = chat.filter((m) => !seenChat.current!.has(chatKey(m)));
+    fresh.forEach((m) => seenChat.current!.add(chatKey(m)));
+    if (!settings.automaticSelect || bansPerTeam === undefined) {
+      return;
+    }
+
+    let next = settings;
+    for (const message of fresh) {
+      const applied = chatPickBan(next, message, mappoolOptions, bansPerTeam);
+      if (applied) {
+        remember(next);
+        next = applied;
+      }
+    }
+    if (next !== settings) {
+      setSettings(next);
+    }
+    // only new chat should trigger this, not every settings change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chat, tosuConnected]);
+
+  const setChatPickBan = (value: boolean) =>
+    setSettings(
+      produce((settings) => {
+        settings.automaticSelect = value;
+      }),
+    );
+
   // Bans & Picks dropdown
   const [bansSelection, setBansSelection] = useState("Select");
   const [bansOpen, setBansOpen] = useState(false);
@@ -274,6 +341,7 @@ function DashboardView({
       return;
     }
 
+    remember(settings);
     setSettings(
       produce((settings) => {
         const selection = settings[settings.activePlayer];
@@ -557,6 +625,23 @@ function DashboardView({
             </button>
           </div>
         </div>
+
+        <div id="pickban-extras">
+          {bansPerTeam !== undefined && (
+            <div className="checkbox-input">
+              <label htmlFor="chat-pickban">Pick/ban from chat</label>
+              <input
+                id="chat-pickban"
+                type="checkbox"
+                checked={settings.automaticSelect}
+                onChange={(e) => setChatPickBan(e.target.checked)}
+              />
+            </div>
+          )}
+          <button id="pickban-undo" disabled={!canUndo} onClick={undo}>
+            Undo last
+          </button>
+        </div>
       </motion.div>
 
       <motion.div key="countdown-section">
@@ -658,4 +743,61 @@ function DashboardView({
       </div>
     </div>
   );
+}
+
+type MappoolState = Pick<
+  DashboardSettings,
+  "player1" | "player2" | "activePlayer" | "lastPickedBy"
+>;
+
+const mappoolStateOf = (settings: DashboardSettings): MappoolState => ({
+  player1: settings.player1,
+  player2: settings.player2,
+  activePlayer: settings.activePlayer,
+  lastPickedBy: settings.lastPickedBy,
+});
+
+type ChatMessage = { name: string; message: string; team: string; timestamp: string };
+
+const chatKey = (m: ChatMessage) => `${m.timestamp}|${m.name}|${m.message}`;
+
+/**
+ * A chat message that's only a map code ("HR1", "hr1!") from the team whose
+ * turn it is bans it, or picks it once both teams have used their bans.
+ * Anything else, or a map that's already out, changes nothing.
+ */
+function chatPickBan(
+  settings: DashboardSettings,
+  message: ChatMessage,
+  mappoolOptions: string[],
+  bansPerTeam: number,
+): DashboardSettings | null {
+  const player =
+    message.team === "left" ? "player1" : message.team === "right" ? "player2" : null;
+  if (!player || player !== settings.activePlayer) {
+    return null;
+  }
+
+  const code = message.message.trim().replace(/[!.?]+$/, "").toUpperCase();
+  // nobody picks the tiebreaker, it just happens
+  if (!mappoolOptions.includes(code) || code.startsWith("TB")) {
+    return null;
+  }
+
+  const { player1, player2 } = settings;
+  if ([player1, player2].some((p) => p.bans.includes(code) || p.picks.includes(code))) {
+    return null;
+  }
+
+  const bansDone =
+    player1.bans.length >= bansPerTeam && player2.bans.length >= bansPerTeam;
+  const kind = bansDone ? "picks" : "bans";
+
+  return produce(settings, (draft) => {
+    draft[player][kind].push(code);
+    if (kind === "picks") {
+      draft.lastPickedBy = player;
+    }
+    draft.activePlayer = player === "player1" ? "player2" : "player1";
+  });
 }

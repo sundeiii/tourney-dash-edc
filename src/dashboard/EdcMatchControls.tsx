@@ -87,6 +87,14 @@ export function EdcMatchControls() {
     (match: EdcMatch) =>
       setSettings(
         produce((settings) => {
+          // a different match starts with a clean mappool
+          if (match.id !== settings.edc.matchId) {
+            settings.player1 = { bans: [], picks: [] };
+            settings.player2 = { bans: [], picks: [] };
+            settings.lastPickedBy = null;
+            settings.activePlayer = "player1";
+          }
+
           Object.assign(settings.edc, {
             matchId: match.id,
             roundId: match.round.id,
