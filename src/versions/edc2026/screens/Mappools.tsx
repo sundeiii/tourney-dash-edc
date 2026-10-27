@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import type { AnimTypes } from "~/animations";
 import { getAnimations, sectionVariants } from "~/animations";
 import { Casters } from "../components/Casters";
+import { Chat } from "../components/Chat";
 import { FooterContent } from "../components/FooterContent";
 import { HeaderContent } from "../components/HeaderContent";
 import { MainContent } from "../components/MainContent";
@@ -204,9 +205,8 @@ export function MappoolScreen({ from, to }: MappoolScreenProps) {
             <FooterContent>
               <div id="bottom">
                 <StageInfo />
-                <div id="casters-spacer">
-                  <Casters />
-                </div>
+                <Chat />
+                <Casters />
               </div>
             </FooterContent>
           </motion.div>

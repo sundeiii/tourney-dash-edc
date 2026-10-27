@@ -485,7 +485,7 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   font-size: 20px;
   font-family: Exo2Bold, Helvetica, sans-serif;
   font-weight: normal;
-  color: #09205B;
+  color: #FFFFFF;
   transition:
     width 0.5s cubic-bezier(0.77, 0, 0.175, 1),
     height 0.5s cubic-bezier(0.77, 0, 0.175, 1);
@@ -494,7 +494,6 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
 #score-difference-red {
   width: calc(100% - 5px);
   text-align: right;
-  color: #651217;
   padding-left: 0;
   padding-right: 5px;
 }
