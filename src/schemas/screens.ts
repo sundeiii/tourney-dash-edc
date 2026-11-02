@@ -9,6 +9,7 @@ export const screenNames = [
   "scheduling",
   "mappool",
   "showcase",
+  "showcase2",
   "qualresults",
   "qualteam",
   "winnersbracket",

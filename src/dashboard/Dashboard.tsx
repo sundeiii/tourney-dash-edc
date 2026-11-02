@@ -35,6 +35,7 @@ const SCENE_LABELS: Record<ScreenName, string> = {
   scheduling: "Scheduling",
   mappool: "Mappool",
   showcase: "Mappool Reveal",
+  showcase2: "Mappool Showcase",
   qualresults: "Qualifier Results",
   qualteam: "Team Results",
   winnersbracket: "Winners Bracket",
@@ -59,6 +60,7 @@ const SCENE_GROUP: Record<
 > = {
   startingsoon: "stream",
   showcase: "stream",
+  showcase2: "stream",
   qualresults: "stream",
   qualteam: "stream",
   ending: "stream",

@@ -27,6 +27,7 @@ import { WinnersBracketScreen as WinnersBracketScreenEDC2026 } from "./versions/
 import { LosersBracketScreen as LosersBracketScreenEDC2026 } from "./versions/edc2026/screens/LosersBracketScreen";
 import { StartingSoonScreen as StartingSoonScreenEDC2026 } from "./versions/edc2026/screens/StartingSoon";
 import { ShowcaseScreen as ShowcaseScreenEDC2026 } from "./versions/edc2026/screens/Showcase";
+import { Showcase2Screen as Showcase2ScreenEDC2026 } from "./versions/edc2026/screens/Showcase2";
 import { EndingScreen as EndingScreenEDC2026 } from "./versions/edc2026/screens/Ending";
 import { QualifierResultsScreen as QualifierResultsScreenEDC2026 } from "./versions/edc2026/screens/QualifierResults";
 import { QualifierTeamScreen as QualifierTeamScreenEDC2026 } from "./versions/edc2026/screens/QualifierTeam";
@@ -52,6 +53,7 @@ export function Screens() {
           scheduling: SchedulingScreenEDC2026,
           mappool: MappoolScreenEDC2026,
           showcase: ShowcaseScreenEDC2026,
+          showcase2: Showcase2ScreenEDC2026,
           qualresults: QualifierResultsScreenEDC2026,
           qualteam: QualifierTeamScreenEDC2026,
           winnersbracket: WinnersBracketScreenEDC2026,
@@ -71,6 +73,7 @@ export function Screens() {
           scheduling: SchedulingScreen2026,
           mappool: MappoolScreen2026,
           showcase: StandbyScreen2026,
+          showcase2: StandbyScreen2026,
           qualresults: SchedulingScreen2026,
           qualteam: SchedulingScreen2026,
           winnersbracket: WinnersBracketScreen2026,
@@ -89,6 +92,7 @@ export function Screens() {
           scheduling: SchedulingScreen2025,
           mappool: MappoolScreen2025,
           showcase: StandbyScreen2025,
+          showcase2: StandbyScreen2025,
           qualresults: SchedulingScreen2025,
           qualteam: SchedulingScreen2025,
           winnersbracket: StandbyScreen2025,

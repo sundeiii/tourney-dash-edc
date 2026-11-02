@@ -60,11 +60,14 @@ export function TosuProvider({ children }: { children: ReactNode }) {
       od: 0,
       stars: 0,
       bpm: 0,
+      hp: 0,
       length: 0,
+      time: { live: 0, firstObject: 0, lastObject: 0 },
       setId: 0,
       bgUrl: null,
       backgroundPath: null,
     },
+    playerName: "",
   });
 
   return <TosuContext value={tosuData}>{children}</TosuContext>;

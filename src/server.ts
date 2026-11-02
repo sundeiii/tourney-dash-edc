@@ -251,22 +251,45 @@ async function run() {
         }
 
         const authed = CENTAUREA_AUTHED_PATH.test(path);
-        const headers: Record<string, string> = { accept: "application/json" };
-        let target = `${CENTAUREA_API}/${path}${url.search}`;
-        if (authed && CENTAUREA_SESSION) {
-          headers.cookie = `centaurea_session=${CENTAUREA_SESSION}`;
-        } else if (authed) {
-          if (CENTAUREA_RELAY_TOKEN) {
-            headers.authorization = `Bearer ${CENTAUREA_RELAY_TOKEN}`;
-          }
-          target = `${CENTAUREA_RELAY_URL}/${path}`;
-        }
+        const direct = `${CENTAUREA_API}/${path}${url.search}`;
+        const relay = {
+          target: `${CENTAUREA_RELAY_URL}/${path}`,
+          headers: {
+            accept: "application/json",
+            ...(CENTAUREA_RELAY_TOKEN && {
+              authorization: `Bearer ${CENTAUREA_RELAY_TOKEN}`,
+            }),
+          },
+        };
+        const attempts = !authed
+          ? [{ target: direct, headers: { accept: "application/json" } }]
+          : CENTAUREA_SESSION
+            ? // the cookie expires every few days; the relay's may be fresher
+              [
+                {
+                  target: direct,
+                  headers: {
+                    accept: "application/json",
+                    cookie: `centaurea_session=${CENTAUREA_SESSION}`,
+                  },
+                },
+                relay,
+              ]
+            : [relay];
 
-        let upstream: Response;
-        try {
-          upstream = await fetch(target, { headers });
-        } catch (e) {
-          console.error(`couldn't reach ${new URL(target).host}:`, e);
+        let upstream: Response | undefined;
+        for (const { target, headers } of attempts) {
+          try {
+            upstream = await fetch(target, { headers });
+          } catch (e) {
+            console.error(`couldn't reach ${new URL(target).host}:`, e);
+            continue;
+          }
+          if (upstream.status !== 401 && upstream.status !== 403) {
+            break;
+          }
+        }
+        if (!upstream) {
           return new Response("Upstream unreachable", { status: 502 });
         }
 

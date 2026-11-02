@@ -9,7 +9,14 @@ import showcase from "../static/img/edc/showcase.png";
 import { GAMEPLAY_AREA, SHOWCASE_AREA } from "../screens/defs";
 import { GameplaySvgMask } from "./GameplayTransparencyMask";
 
-type Layer = "blank" | "mappool" | "seedings" | "gameplay" | "showcase";
+// "none" fades every background out, for overlays drawn straight on the game
+type Layer =
+  | "blank"
+  | "mappool"
+  | "seedings"
+  | "gameplay"
+  | "showcase"
+  | "none";
 
 const LAYER_FOR_SCREEN: Record<ScreenName, Layer> = {
   start: "blank",
@@ -28,6 +35,7 @@ const LAYER_FOR_SCREEN: Record<ScreenName, Layer> = {
   standby: "gameplay",
   versus: "gameplay",
   showcase: "showcase",
+  showcase2: "none",
 };
 
 const IMAGE_LAYERS = [

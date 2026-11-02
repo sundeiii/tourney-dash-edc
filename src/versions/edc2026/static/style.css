@@ -2672,6 +2672,120 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   color: var(--edc-blue);
 }
 
+/* MAPPOOL SHOWCASE — no background, drawn straight on the full-screen osu!
+   capture, so every text gets a shadow to stay readable over bright maps */
+
+.sc2-map,
+.sc2-slot,
+.sc2-corner {
+  position: absolute;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+.sc2-map {
+  top: 36px;
+  left: 48px;
+  width: 1300px;
+  padding-left: 24px;
+  border-left: 8px solid var(--edc-blue);
+}
+
+.sc2-title {
+  font-size: 56px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sc2-line {
+  font-size: 28px;
+  font-family: Exo2Bold, Helvetica, sans-serif;
+}
+
+.sc2-label {
+  font-family: Exo2Bold, Helvetica, sans-serif;
+  color: var(--edc-blue-light);
+  text-transform: uppercase;
+}
+
+.sc2-line .sc2-label {
+  text-transform: none;
+}
+
+.sc2-slot {
+  top: 28px;
+  right: 48px;
+  text-align: right;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1;
+}
+
+.sc2-code {
+  font-size: 96px;
+  color: #FFFFFF;
+}
+
+.sc2-code.nm { color: #6e97ff; }
+.sc2-code.hd { color: #fff36e; }
+.sc2-code.hr { color: #ff6e6e; }
+.sc2-code.dt,
+.sc2-code.nc { color: #b46eff; }
+.sc2-code.fm { color: #6effe0; }
+.sc2-code.tb { color: var(--edc-blue-light); }
+
+.sc2-stars {
+  font-size: 40px;
+  color: var(--edc-blue-light);
+}
+
+/* bottom left, clear of osu!'s key overlay and the spectator list */
+.sc2-corner {
+  left: 48px;
+  bottom: 36px;
+  width: 300px;
+}
+
+.sc2-corner > .sc2-label {
+  font-size: 24px;
+}
+
+.sc2-player {
+  font-size: 32px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc2-progress {
+  height: 6px;
+  margin: 12px 0 14px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.sc2-progress > div {
+  height: 100%;
+  background: #FFFFFF;
+  transition: width 0.5s linear;
+}
+
+.sc2-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  row-gap: 8px;
+}
+
+.sc2-stats .sc2-label {
+  font-size: 18px;
+}
+
+.sc2-value {
+  font-size: 34px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1;
+}
+
 /* QUALIFIER RESULTS — two columns between the logo and the seedings
    background's cornflowers; --row-h comes from how many teams there are */
 

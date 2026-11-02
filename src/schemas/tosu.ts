@@ -95,6 +95,8 @@ export const tosuApiResponseSchema = z
       ),
     }),
     beatmap: tosuBeatmapSchema,
+    // whose play or replay is on screen; optional so an older tosu still parses
+    play: z.object({ playerName: z.string() }).optional(),
     directPath: z.object({
       beatmapBackground: z.string(),
     }),
@@ -106,7 +108,7 @@ export const tosuApiResponseSchema = z
     }),
   })
   .transform((tosuResponse) => {
-    const { beatmap, directPath, folders, tourney } = tosuResponse;
+    const { beatmap, directPath, folders, tourney, play } = tosuResponse;
 
     const beatmapBackgroundPath =
       `${folders.songs}/${directPath.beatmapBackground}`.replaceAll("\\", "/");
@@ -165,10 +167,21 @@ export const tosuApiResponseSchema = z
         bpm:
           tourney.clients[0]?.beatmap.stats.bpm.realtime ||
           beatmap.stats.bpm.realtime,
+        hp:
+          tourney.clients[0]?.beatmap.stats.hp.converted ||
+          beatmap.stats.hp.converted ||
+          tourney.clients[0]?.beatmap.stats.hp.original ||
+          beatmap.stats.hp.original,
         length,
+        time: {
+          live: beatmap.time.live,
+          firstObject: beatmap.time.firstObject,
+          lastObject: beatmap.time.lastObject,
+        },
         bgUrl: getBeatmapBgUrl(beatmap.set) || null,
         backgroundPath: beatmapBackgroundPath || null,
       },
+      playerName: play?.playerName ?? "",
     };
   });
 
