@@ -2758,6 +2758,17 @@ linear-gradient(to bottom, #FFFFFF 50%, transparent 50%) right / 1px 24px repeat
   text-overflow: ellipsis;
 }
 
+.sc2-combo {
+  margin-top: 6px;
+  font-size: 40px;
+  font-family: Exo2Black, Helvetica, sans-serif;
+  line-height: 1.1;
+}
+
+.sc2-combo .sc2-label {
+  font-size: 22px;
+}
+
 .sc2-progress {
   height: 6px;
   margin: 12px 0 14px;

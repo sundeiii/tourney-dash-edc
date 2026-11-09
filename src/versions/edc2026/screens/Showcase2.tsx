@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import type { AnimTypes } from "~/animations";
 import { getAnimations, sectionVariants } from "~/animations";
 import { FitText } from "../components/FitText";
@@ -27,13 +27,15 @@ interface Showcase2ScreenProps {
 /**
  * The mappool showcase drawn straight on the full-screen osu! capture, with
  * no background: map info up top, the player and stats bottom left, clear of
- * osu!'s own key overlay and the spectator list.
+ * osu!'s own key overlay and the spectator list. It only shows while a map is
+ * actually being played or replayed, so song select and results stay clean.
  */
 export function Showcase2Screen({ from, to }: Showcase2ScreenProps) {
   const anims: AnimTypes = getAnimations(to, from ?? "");
   const slideDirection: 1 | -1 = 1;
 
-  const { beatmap, tourney, playerName } = useTosu();
+  const { beatmap, tourney, playerName, combo, gameState } = useTosu();
+  const playing = gameState === "play";
   const slot = useEdcSlotForBeatmap(beatmap);
 
   // tosu's map length ignores the rate, unlike its other stats; the tosu
@@ -46,7 +48,10 @@ export function Showcase2Screen({ from, to }: Showcase2ScreenProps) {
   const { live, firstObject, lastObject } = beatmap.time;
   const progress =
     lastObject > firstObject
-      ? Math.min(1, Math.max(0, (live - firstObject) / (lastObject - firstObject)))
+      ? Math.min(
+          1,
+          Math.max(0, (live - firstObject) / (lastObject - firstObject)),
+        )
       : 0;
 
   const stats = [
@@ -69,44 +74,61 @@ export function Showcase2Screen({ from, to }: Showcase2ScreenProps) {
             : sectionVariants.main.none)}
       >
         <MainContent>
-          <div className="sc2-map">
-            <FitText className="sc2-title">
-              {beatmap.artist} - {beatmap.title}
-            </FitText>
-            <div className="sc2-line">
-              <span className="sc2-label">Difficulty:</span> {beatmap.difficulty}
-            </div>
-            <div className="sc2-line">
-              <span className="sc2-label">Mapped by:</span> {beatmap.mapper}
-            </div>
-          </div>
-
-          <div className="sc2-slot">
-            <div className={clsx("sc2-code", slot?.mod.toLowerCase())}>
-              {slot?.code ?? "—"}
-            </div>
-            <div className="sc2-stars">{fixed(beatmap.stars, 2)} ★</div>
-          </div>
-
-          <div className="sc2-corner">
-            {playerName && (
-              <>
-                <div className="sc2-label">Replay by</div>
-                <div className="sc2-player">{playerName}</div>
-              </>
-            )}
-            <div className="sc2-progress">
-              <div style={{ width: `${progress * 100}%` }} />
-            </div>
-            <div className="sc2-stats">
-              {stats.map(([label, value]) => (
-                <div key={label}>
-                  <div className="sc2-label">{label}</div>
-                  <div className="sc2-value">{value}</div>
+          <AnimatePresence>
+            {playing && (
+              <motion.div
+                key="sc2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <div className="sc2-map">
+                  <FitText className="sc2-title">
+                    {beatmap.artist} - {beatmap.title}
+                  </FitText>
+                  <div className="sc2-line">
+                    <span className="sc2-label">Difficulty:</span>{" "}
+                    {beatmap.difficulty}
+                  </div>
+                  <div className="sc2-line">
+                    <span className="sc2-label">Mapped by:</span>{" "}
+                    {beatmap.mapper}
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
+
+                <div className="sc2-slot">
+                  <div className={clsx("sc2-code", slot?.mod.toLowerCase())}>
+                    {slot?.code ?? "—"}
+                  </div>
+                  <div className="sc2-stars">{fixed(beatmap.stars, 2)} ★</div>
+                </div>
+
+                <div className="sc2-corner">
+                  {playerName && (
+                    <>
+                      <div className="sc2-label">Replay by</div>
+                      <div className="sc2-player">{playerName}</div>
+                    </>
+                  )}
+                  <div className="sc2-combo">
+                    <span className="sc2-label">Combo</span> {combo}x
+                  </div>
+                  <div className="sc2-progress">
+                    <div style={{ width: `${progress * 100}%` }} />
+                  </div>
+                  <div className="sc2-stats">
+                    {stats.map(([label, value]) => (
+                      <div key={label}>
+                        <div className="sc2-label">{label}</div>
+                        <div className="sc2-value">{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </MainContent>
       </motion.div>
     </div>

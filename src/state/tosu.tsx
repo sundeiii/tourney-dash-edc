@@ -68,6 +68,8 @@ export function TosuProvider({ children }: { children: ReactNode }) {
       backgroundPath: null,
     },
     playerName: "",
+    combo: 0,
+    gameState: "",
   });
 
   return <TosuContext value={tosuData}>{children}</TosuContext>;

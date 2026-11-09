@@ -95,8 +95,15 @@ export const tosuApiResponseSchema = z
       ),
     }),
     beatmap: tosuBeatmapSchema,
-    // whose play or replay is on screen; optional so an older tosu still parses
-    play: z.object({ playerName: z.string() }).optional(),
+    // whose play or replay is on screen and what's happening in osu! ("play"
+    // while a map runs); optional so an older tosu still parses
+    play: z
+      .object({
+        playerName: z.string(),
+        combo: z.object({ current: z.number() }).optional(),
+      })
+      .optional(),
+    state: z.object({ name: z.string() }).optional(),
     directPath: z.object({
       beatmapBackground: z.string(),
     }),
@@ -108,7 +115,8 @@ export const tosuApiResponseSchema = z
     }),
   })
   .transform((tosuResponse) => {
-    const { beatmap, directPath, folders, tourney, play } = tosuResponse;
+    const { beatmap, directPath, folders, tourney, play, state } =
+      tosuResponse;
 
     const beatmapBackgroundPath =
       `${folders.songs}/${directPath.beatmapBackground}`.replaceAll("\\", "/");
@@ -182,6 +190,8 @@ export const tosuApiResponseSchema = z
         backgroundPath: beatmapBackgroundPath || null,
       },
       playerName: play?.playerName ?? "",
+      combo: play?.combo?.current ?? 0,
+      gameState: state?.name ?? "",
     };
   });
 
