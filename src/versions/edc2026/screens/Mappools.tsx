@@ -83,19 +83,21 @@ function ModGroup({ mod, maps, names, settings }: ModGroupProps) {
 // a row holds about six of the small cards, so mods with few maps share one
 // and a pool with many mods still fits above the footer
 const MAPS_PER_ROW = 6;
+// the tiebreaker card is about as wide as three maps
+const TB_WIDTH = 3;
 
 function packRows<T extends { mod: string; maps: unknown[] }>(groups: T[]) {
   const rows: T[][] = [];
   let count = Infinity;
   for (const group of groups) {
     const tb = group.mod.toLowerCase() === "tb";
-    if (tb || count + group.maps.length > MAPS_PER_ROW) {
+    const width = tb ? TB_WIDTH : group.maps.length;
+    if (count + width > MAPS_PER_ROW) {
       rows.push([]);
       count = 0;
     }
     rows.at(-1)!.push(group);
-    // the tiebreaker card is a row of its own
-    count = tb ? Infinity : count + group.maps.length;
+    count += width;
   }
   return rows;
 }

@@ -102,6 +102,7 @@ function EdcDashboard() {
       sceneControls={<EdcQualifierControls />}
       scheduleControls={<EdcScheduleExtras />}
       bansPerTeam={round?.bansPerTeam ?? 0}
+      abbaBans={(round?.bestOf ?? 0) >= 13}
     />
   );
 }
@@ -218,6 +219,8 @@ type DashboardViewProps = {
   scheduleControls?: ReactNode;
   // bans each team gets; set, it offers picking and banning from match chat
   bansPerTeam?: number;
+  // the best of 13 bans ABBA instead of taking turns
+  abbaBans?: boolean;
   showTournamentId?: boolean;
 };
 
@@ -227,6 +230,7 @@ function DashboardView({
   sceneControls,
   scheduleControls,
   bansPerTeam,
+  abbaBans = false,
   showTournamentId = false,
 }: DashboardViewProps) {
   const {
@@ -309,7 +313,13 @@ function DashboardView({
 
     let next = settings;
     for (const message of fresh) {
-      const applied = chatPickBan(next, message, mappoolOptions, bansPerTeam);
+      const applied = chatPickBan(
+        next,
+        message,
+        mappoolOptions,
+        bansPerTeam,
+        abbaBans,
+      );
       if (applied) {
         remember(next);
         next = applied;
@@ -346,8 +356,10 @@ function DashboardView({
     remember(settings);
     setSettings(
       produce((settings) => {
-        const selection = settings[settings.activePlayer];
-        if (!selection[pickOrBan].includes(map)) {
+        const player = settings.activePlayer;
+        const selection = settings[player];
+        const adding = !selection[pickOrBan].includes(map);
+        if (adding) {
           // remove from all selections first
           for (const player of ["player1", "player2"] as const) {
             for (const type of ["bans", "picks"] as const) {
@@ -368,8 +380,9 @@ function DashboardView({
             ? null
             : settings.activePlayer;
         }
-        settings.activePlayer =
-          settings.activePlayer === "player1" ? "player2" : "player1";
+        settings.activePlayer = adding
+          ? nextTurn(settings, player, pickOrBan, abbaBans)
+          : otherPlayer(player);
       }),
     );
 
@@ -763,30 +776,68 @@ type ChatMessage = { name: string; message: string; team: string; timestamp: str
 
 const chatKey = (m: ChatMessage) => `${m.timestamp}|${m.name}|${m.message}`;
 
+const otherPlayer = (player: "player1" | "player2") =>
+  player === "player1" ? "player2" : "player1";
+
 /**
- * A chat message that's only a map code ("HR1", "hr1!") from the team whose
- * turn it is bans it, or picks it once both teams have used their bans.
- * Anything else, or a map that's already out, changes nothing.
+ * Whose turn it is once `player` has banned or picked. Turns alternate,
+ * except that ABBA bans give the second team two bans in a row.
+ */
+function nextTurn(
+  settings: MappoolState,
+  player: "player1" | "player2",
+  kind: "bans" | "picks",
+  abbaBans: boolean,
+) {
+  const bans = settings.player1.bans.length + settings.player2.bans.length;
+  return kind === "bans" && abbaBans && bans === 2 ? player : otherPlayer(player);
+}
+
+// a map code anywhere in a message: "hd3", "HD 3", "hd-3", "ban hd3 pls"
+const CODE_IN_CHAT = /(?<![a-z])(nm|hd|hr|dt|fm|tb)\s*[-#]?\s*0*(\d{1,2})(?!\d)/gi;
+// anything longer is the team talking among themselves, not answering the ref
+const MAX_PICK_WORDS = 6;
+
+/** The one pool map a short chat message names, if it names exactly one. */
+export function codeFromChat(message: string, mappoolOptions: string[]) {
+  if (message.trim().split(/\s+/).length > MAX_PICK_WORDS) {
+    return null;
+  }
+  const codes = new Set(
+    [...message.matchAll(CODE_IN_CHAT)]
+      .map(([, mod, number]) => `${mod}${number}`.toUpperCase())
+      .filter((code) => mappoolOptions.includes(code)),
+  );
+  return codes.size === 1 ? [...codes][0]! : null;
+}
+
+/**
+ * A short chat message naming one map ("hd3", "ban HD3 pls") from the team
+ * whose turn it is bans it, or picks it once both teams have used their bans.
+ * Before anything is banned either team can start, since the roll decides who
+ * goes first. Anything else, or a map that's already out, changes nothing.
  */
 function chatPickBan(
   settings: DashboardSettings,
   message: ChatMessage,
   mappoolOptions: string[],
   bansPerTeam: number,
+  abbaBans: boolean,
 ): DashboardSettings | null {
   const player =
     message.team === "left" ? "player1" : message.team === "right" ? "player2" : null;
-  if (!player || player !== settings.activePlayer) {
-    return null;
-  }
-
-  const code = message.message.trim().replace(/[!.?]+$/, "").toUpperCase();
-  // nobody picks the tiebreaker, it just happens
-  if (!mappoolOptions.includes(code) || code.startsWith("TB")) {
-    return null;
-  }
-
   const { player1, player2 } = settings;
+  const started = [player1, player2].some((p) => p.bans.length || p.picks.length);
+  if (!player || (started && player !== settings.activePlayer)) {
+    return null;
+  }
+
+  const code = codeFromChat(message.message, mappoolOptions);
+  // nobody picks the tiebreaker, it just happens
+  if (!code || code.startsWith("TB")) {
+    return null;
+  }
+
   if ([player1, player2].some((p) => p.bans.includes(code) || p.picks.includes(code))) {
     return null;
   }
@@ -800,6 +851,6 @@ function chatPickBan(
     if (kind === "picks") {
       draft.lastPickedBy = player;
     }
-    draft.activePlayer = player === "player1" ? "player2" : "player1";
+    draft.activePlayer = nextTurn(draft, player, kind, abbaBans);
   });
 }
